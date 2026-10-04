@@ -369,6 +369,7 @@ GPUCache/
 bin/
 resources/
 XppMetadata/
+XppSource/
 BPCheck.xml
 BuildModelResult.xml
 BuildProjectResult.err.xml
