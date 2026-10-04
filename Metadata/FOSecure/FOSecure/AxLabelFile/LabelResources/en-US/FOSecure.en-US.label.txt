@@ -1,0 +1,258 @@
+﻿ActiveContentAutoAction=Automatic action
+ ;Active content kind: an action run on open or on a field event. Harmless alone; the risk is whatever script it points at
+ActiveContentDynamicMedia=Dynamic media
+ ;Active content kind: embedded multimedia, or launching another application
+ActiveContentEmbeddedFile=Embedded file
+ ;Active content kind: a file carried inside another file. Ordinary in electronic invoices, so informational on its own
+ActiveContentExternalEntity=External entity
+ ;Active content kind: an XML external entity declaration
+ActiveContentExternalReference=External reference
+ ;Active content kind: a reference to another document or an external location
+ActiveContentField=Active content
+ ;Field label for the active content severity on the inspection table. Must differ from the FOSecureActiveContentSeverity enum label
+ActiveContentFindingCount=Finding count
+ ;Field label for how many active content findings were recorded
+ActiveContentFindings=Findings
+ ;Field label for the active content findings recorded against an attachment
+ActiveContentFindingsHelp=What inspection found in this file that can run when it is opened, such as JavaScript in a PDF, a script element in an image, or a macro project in a workbook.
+ ;HelpText for the findings field on the attachment content inspection table
+ActiveContentInteractiveForm=Interactive form
+ ;Active content kind: a fillable form. Ordinary in tax and banking documents, so informational on its own
+ActiveContentKindEnum=Active content kind
+ ;Label of the FOSecureActiveContentKind enum. Must differ from the field label of the same meaning
+ActiveContentMacro=Macro
+ ;Active content kind: an Office VBA macro project
+ActiveContentNone=None
+ ;Active content kind: nothing that can run was found
+ActiveContentPolyglot=Multiple formats in one file
+ ;Active content kind: the file is valid as two formats at once, so what runs depends on which reader opens it
+ActiveContentScript=Script
+ ;Active content kind: script that runs when the file is opened, such as JavaScript in a PDF or a script element in markup
+ActiveContentSeverityEnum=Active content severity
+ ;Label of the FOSecureActiveContentSeverity enum. The enum is extensible, so its members cannot be ordered with comparison operators; rank them through a helper
+AttachedFileId=File ID
+ ;Field label for the DocuValue file identifier the scan row is keyed on
+AttachmentActiveContentBlocked=The file '%1' contains active content that can run when the file is opened (%2). The file was rejected.
+ ;Error shown when an attachment is blocked for active content. %1 file name, %2 the findings
+AttachmentContentMismatch=The content of file '%1' does not match its '%2' extension. It was detected as '%3'. The file was rejected.
+ ;Error shown when an attachment fails magic-byte validation. %1 file name, %2 claimed extension, %3 detected type
+AttachmentInspectionDeveloperDoc=One row per stored file whose content has been inspected, keyed on the DocuValue file identifier. Written by FOSecureContentGate and read by the Docu scan delegate so that preview and download are answered without reading the file again. Deliberately separate from FOSecureAttachmentScan: that table's existsForFileId drives malware submission, so a row written here would suppress scanning.
+ ;FOSecure
+AttachmentInspectionTitle=Attachment content inspections
+ ;Table and page title for the content inspection result table
+AttachmentMalwareDetected=The file '%1' was identified as malware and cannot be used. Scan result: %2.
+ ;Error shown when a malicious attachment is blocked. %1 file name, %2 scan result
+AttachmentReference=Attachment
+ ;Field label for the DocuRef record the scanned file belongs to
+AttachmentScanDeveloperDoc=One row per stored file submitted to Microsoft Defender for Storage for malware scanning. Keyed on the DocuValue file identifier. Written by FOSecureMalwareScanManager and resolved by the FOSecureMalwareScanStatusService batch job; read by FOSecureMalwareScanManager.rejectIfUnsafe to decide whether an attachment may be released.
+ ;FOSecure
+AttachmentScanNotComplete=Malware scanning of the file '%1' has not finished, so it cannot be used yet. Try again shortly.
+ ;Error shown when a pending attachment is blocked because unavailable results are set to block. %1 file name
+AttachmentScanResultUnavailable=No malware scan result is available for the file '%1', so it cannot be used. Scan state: %2.
+ ;Error shown when an unscannable attachment is blocked. %1 file name, %2 scan state
+AttachmentScanTitle=Attachment malware scans
+ ;Table and page title for the malware scan state table
+AttachmentSecurityGroup=Attachment security
+ ;Submenu under Document management holding both the malware scan results and the content inspection results. Broader than the original malware scanning caption because it now covers both
+AttachmentSecurityRole=Attachment security administrator
+ ;Security role for administrators who configure and monitor attachment scanning
+BlockActiveContent=Block attachments that contain active content
+ ;Checkbox on Document management parameters, Security tab
+BlockActiveContentHelp=When enabled, an attachment is rejected if inspection finds content that can run when the file is opened, such as JavaScript in a PDF or a macro in a workbook whose extension does not allow one. When disabled, findings are recorded on the Attachment content inspections page and nothing is blocked.
+ ;HelpText for the block active content checkbox
+BlockWhenUnavailable=Block attachments when a scan result is unavailable
+ ;Checkbox on Document management parameters, Security tab
+BlockWhenUnavailableHelp=When enabled, an attachment cannot be previewed or downloaded until Defender reports it clean. This also blocks access during the short window after upload while the scan is still pending.
+ ;HelpText for the block-when-unavailable checkbox
+ContentBytesInspected=Bytes inspected
+ ;Field label for how much of the file was actually read
+ContentCheckOutcome=Content check outcome
+ ;FOSecure
+ContentInspectedOn=Inspected
+ ;Field label for when the content was inspected
+ContentInspectionViewPrivilege=View attachment content inspections
+ ;Security privilege covering the attachment content inspections page
+ContentInspectorVersion=Inspector version
+ ;Field label for the detection logic version that produced the result. A row below the current version is inspected again
+ContentTruncated=Partially inspected
+ ;Field label for whether a size or time limit stopped the inspection before the whole file was read
+ContradictsTheExtension=Contradicts the extension
+ ;FOSecure
+DetectedFileExtension=Detected extension
+ ;Field label for the extension of the format the content was identified as
+DetectedFileType=Detected type
+ ;Field label for the readable name of the format the content was identified as
+DetectionIsExact=Type confirmed
+ ;Field label for whether an inspector positively named the format, rather than only matching a signature shared by several formats
+ExtensionCheckField=Extension check
+ ;Field label for the content versus extension outcome on the inspection table. Must differ from the FOSecureContentCheckOutcome enum label
+FileSha256=SHA-256
+ ;Field label for the content hash, used to correlate with Defender for Cloud alerts
+FindingMarkupEventHandler=Inline event handler
+ ;Active content finding. Markup carries an on event attribute that runs script
+FindingMarkupExternalEntity=External entity declaration
+ ;Active content finding. XML declares an external entity, which can read local files or reach the network
+FindingMarkupExternalUse=External use reference
+ ;Active content finding. SVG pulls content from outside the file
+FindingMarkupForeignObject=Foreign object element
+ ;Active content finding. SVG embeds arbitrary markup. Legitimate in diagram tools, so recorded unless it also carries script
+FindingMarkupFrame=Embedded frame or object
+ ;Active content finding. Markup embeds a frame, object or external plugin
+FindingMarkupJavaScriptUrl=Script in a link target
+ ;Active content finding. An attribute value uses a script scheme such as javascript
+FindingMarkupScript=Script element
+ ;Active content finding. Markup carries a script element
+FindingOfficeEmbeddedOle=Embedded OLE object
+ ;Active content finding. The file carries a packaged embedded object, which can be an executable
+FindingOfficeLegacyMacro=Legacy macro stream
+ ;Active content finding. A compound document carries a VBA storage or macro stream
+FindingOfficeMacroDeclared=Package declares macro-enabled content
+ ;Active content finding. The content types declare a macro enabled document while the file name says otherwise
+FindingOfficeVbaProject=VBA macro project
+ ;Active content finding. The package carries a VBA project
+FindingPdfAppendedData=Data appended after the end of the PDF
+ ;Active content finding. Content follows the end marker, which is how a second format is commonly hidden in a PDF
+FindingPdfEmbeddedFile=Embedded file
+ ;Active content finding. PDF carries an attached file. Ordinary in electronic invoices, so recorded rather than blocked
+FindingPdfEncrypted=Encrypted, could not be inspected
+ ;Active content finding. The PDF is encrypted, so its streams could not be read and no conclusion can be drawn
+FindingPdfHeaderOffset=PDF header is not at the start of the file
+ ;Active content finding. The PDF marker appears after other bytes, which readers tolerate but which also enables disguising a second format
+FindingPdfImportData=External data import
+ ;Active content finding. PDF imports form data from another file
+FindingPdfJavaScript=JavaScript in PDF
+ ;Active content finding substituted into the rejection message. PDF carries a JavaScript action or script payload
+FindingPdfLaunch=Launch action
+ ;Active content finding. PDF tries to start an external application or file
+FindingPdfOpenAction=Automatic open action
+ ;Active content finding. PDF runs an action when opened or when a field changes
+FindingPdfRemoteGoTo=Remote document link
+ ;Active content finding. PDF links to a destination in another file
+FindingPdfRichMedia=Embedded multimedia
+ ;Active content finding. PDF carries a rich media or Flash annotation
+FindingPdfSubmitForm=Form submission
+ ;Active content finding. PDF can post form data to a location
+FindingPdfTrailerMissing=PDF end marker is missing
+ ;Active content finding. Usually a truncated upload rather than an attack, so recorded rather than blocked
+FindingPdfXfa=XFA form
+ ;Active content finding. PDF carries an XML Forms Architecture form, which brings its own script
+FindingPolyglot=Valid as more than one file format
+ ;Active content finding. The file satisfies two format signatures at once, so a browser and a document reader disagree about what it is
+FindingZipPrependedData=Data prepended before the start of the archive
+ ;Active content finding. The archive directory points past leading bytes, which is how an archive is hidden inside another format
+Identified=Identified
+ ;FOSecure
+InspectionResultGroup=Inspection result
+ ;Field group holding the inspection outcome fields on the content inspection table
+MalwareScanDuty=Maintain attachment security scanning
+ ;Security duty grouping the attachment malware scanning privilege
+MalwareScanMaintainPrivilege=Maintain attachment malware scanning
+ ;Security privilege covering the malware scan page and batch job
+MalwareScanningGroup=Malware scanning
+ ;Group caption on the Security tab of Document management parameters
+MalwareScanState=Scan state
+ ;Field label for the scan state column
+MalwareScanStateEnum=Malware scan state
+ ;Label of the FOSecureMalwareScanState enum. Must differ from the field label of the same meaning
+MatchesTheExtension=Matches the extension
+ ;FOSecure
+MaxInspectBytes=Maximum bytes to inspect per attachment
+ ;Field on Document management parameters, Security tab
+MaxInspectBytesHelp=How much of each attachment is read when its content is inspected. A larger window finds active content hidden deeper in a file, at the cost of a slower first access. Leave empty to use the default of 4 MB. This is separate from the malware scanning size limit, which governs whole file upload instead.
+ ;HelpText for the content inspection window size field
+MaxScanFileSize=Maximum file size to scan (bytes)
+ ;Field on Document management parameters, Security tab
+MaxScanFileSizeHelp=Attachments larger than this are not submitted for scanning and are recorded as not scanned. Leave empty to use the default of 256 MB.
+ ;HelpText for the maximum scan file size field
+MaxScanWaitSeconds=Seconds to wait for a scan result on upload
+ ;FOSecure
+MaxScanWaitSecondsHelp=After an attachment is uploaded, wait up to this many seconds for Defender to report a verdict before the upload completes. Leave empty to use the default of 10 seconds. Scans that run longer are resolved by the Update scan results batch job.
+ ;FOSecure
+NotChecked=Not checked
+ ;FOSecure
+QuarantineBlobName=Quarantine blob
+ ;Field label for the quarantine blob name
+QuarantineContainer=Quarantine container
+ ;Field on Document management parameters, Security tab
+QuarantineContainerHelp=Blob container that attachments are copied to for scanning. It must not be shared with anything else, because scan results are stored as blob index tags, which are not tamper resistant.
+ ;HelpText for the quarantine container field
+QuarantineKeyVault=Key Vault
+ ;Label for the Key Vault that holds the quarantine container SAS secret, on Document management parameters > Security
+QuarantineKeyVaultHelp=Key Vault holding the container SAS secret. Vaults are set up on the Key Vault parameters page.
+ ;Help text for the quarantine Key Vault parameter
+QuarantineSasSecretName=Key Vault secret for the container SAS
+ ;Field on Document management parameters, Security tab
+QuarantineSasSecretNameHelp=Key Vault secret holding a container scoped shared access signature with create, write, delete and tag permissions. The secret type must be Manual, because that is the only type the platform can read a secret value from.
+ ;Help text for the quarantine SAS secret parameter
+QuarantineStorageAccount=Quarantine storage account
+ ;Field on Document management parameters, Security tab
+QuarantineStorageAccountHelp=Name of the Azure Storage account holding the quarantine container. Malware scanning must be enabled on this account in Microsoft Defender for Cloud.
+ ;HelpText for the quarantine storage account field
+ScanActionsGroup=Attachment scanning
+ ;Caption for the action pane tab and button groups on the attachment malware scans page
+ScanAFile=Scan a file
+ ;Button that uploads a file to verify that malware scanning is working
+ScanCheckCount=Checks
+ ;Field label for how many times the scan result has been polled
+ScanDetails=Scan details
+ ;Field label for the raw scan result or diagnostic detail
+ScanForMalware=Scan attachments for malware
+ ;Checkbox on Document management parameters, Security tab
+ScanForMalwareHelp=When enabled, each attachment is copied to a quarantine container scanned by Microsoft Defender for Storage. Scanning is asynchronous, so an attachment is accepted before its result is known.
+ ;HelpText for the malware scanning checkbox
+ScanIdentityGroup=Identification
+ ;Field group holding the file and attachment identifiers on the scan table
+ScannedFileSize=File size
+ ;Field label for the scanned content length in bytes
+ScanningNotConfigured=Malware scanning is not configured, so no scan results were collected.
+ ;Warning from the scan status batch job when parameters or the Key Vault secret are missing
+ScanResolvedOn=Resolved
+ ;Field label for when the scan result was recorded
+ScanResultGroup=Scan result
+ ;Field group holding the scan outcome fields on the scan table
+ScanStateMalicious=Malicious
+ ;Malware scan state: Defender identified malware
+ScanStateNoThreatsFound=No threats found
+ ;Malware scan state: Defender scanned the file and found nothing
+ScanStateNotScanned=Not scanned
+ ;Malware scan state: Defender declined, for example oversized content
+ScanStatePending=Pending
+ ;Malware scan state: submitted, awaiting a result
+ScanStateScanError=Scan error
+ ;Malware scan state: Defender tried and failed. Transient
+ScanStateTimedOut=Timed out
+ ;Malware scan state: no result arrived within the retention window
+ScanStateUnavailable=Unavailable
+ ;Malware scan state: the quarantine container could not be reached
+ScanStatusJobCaption=Update attachment malware scan results
+ ;Caption of the batch job that records outstanding scan results
+ScanStatusSummary=Malware scan results: %1 resolved, %2 still pending, %3 timed out.
+ ;Information message summarising a scan status check. %1 resolved, %2 pending, %3 timed out
+ScanSubmittedOn=Submitted
+ ;Field label for when the file was submitted for scanning
+SecurityTabIntro=Configure file content validation for record attachments.
+ ;Static text at the top of the Security tab on Document management parameters
+SeverityBlocking=Blocking
+ ;Active content severity: rejected when blocking is enabled on Document management parameters
+SeverityInformational=Informational
+ ;Active content severity: recorded so it can be seen, never blocks
+SeverityNone=None
+ ;Active content severity: nothing was found
+SeveritySuspicious=Suspicious
+ ;Active content severity: worth review, but ordinary business documents produce it, so it never blocks
+SeverityUnassessable=Could not be assessed
+ ;Active content severity: the file is encrypted or hit a size or time limit, so the absence of a finding proves nothing. Never blocks under the current fail open policy
+TestFileSubmitted=The file '%1' was submitted for scanning. Its result appears in this list when the scan completes.
+ ;Information message after an administrator manually uploads a file to test scanning. %1 file name
+TestFileVerdict=Scan state for '%1' after waiting: %2.
+ ;FOSecure
+UnknownFileType=unknown
+ ;Stands in for the detected file format in the attachment content mismatch message when inspection identified a signature but can name neither the format nor an extension for it. Lowercase because it is substituted mid-sentence.
+Unrecognized=Unrecognized
+ ;FOSecure
+UpdateScanResults=Update scan results
+ ;Button that polls Defender for outstanding scan results now
+ValidateAttachmentContent=Validate attachment content against file name extension
+ ;Checkbox on Document management parameters, Security tab
+ValidateAttachmentContentHelp=When enabled, an attachment is rejected if its binary signature contradicts its file name extension. Files whose type cannot be determined are allowed.
+ ;HelpText for the attachment content validation checkbox

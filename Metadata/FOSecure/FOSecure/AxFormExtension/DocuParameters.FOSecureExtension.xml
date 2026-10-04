@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxFormExtension xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V6">
+	<Name>DocuParameters.FOSecureExtension</Name>
+	<ControlModifications />
+	<Controls>
+		<AxFormExtensionControl xmlns="">
+			<Name>FormExtensionControlFOSecureSecurity</Name>
+			<FormControl xmlns=""
+				i:type="AxFormTabPageControl">
+				<Name>FOSecureSecurity</Name>
+				<Type>TabPage</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormGroupControl">
+						<Name>FOSecureSecurityTitle</Name>
+						<Skip>Yes</Skip>
+						<Type>Group</Type>
+						<WidthMode>SizeToAvailable</WidthMode>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormStaticTextControl">
+								<Name>FOSecureSecurityTitleText</Name>
+								<AllowEdit>No</AllowEdit>
+								<Skip>Yes</Skip>
+								<Type>StaticText</Type>
+								<WidthMode>SizeToAvailable</WidthMode>
+								<FormControlExtension
+									i:nil="true" />
+								<Style>MainInstruction</Style>
+								<Text>@FOSecure:SecurityTabIntro</Text>
+							</AxFormControl>
+						</Controls>
+						<AllowUserSetup>No</AllowUserSetup>
+						<FrameType>None</FrameType>
+						<Style>TOCTitleContainer</Style>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormGroupControl">
+						<Name>FOSecureSecurityBody</Name>
+						<HeightMode>SizeToAvailable</HeightMode>
+						<Pattern>FieldsFieldGroups</Pattern>
+						<PatternVersion>1.1</PatternVersion>
+						<Type>Group</Type>
+						<WidthMode>SizeToAvailable</WidthMode>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormGroupControl">
+								<Name>FOSecureMalwareScanning</Name>
+								<Type>Group</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+										i:type="AxFormCheckBoxControl">
+										<Name>FOSecureMalwareScanning_FOSecureScanAttachmentsForMalware</Name>
+										<Type>CheckBox</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>FOSecureScanAttachmentsForMalware</DataField>
+										<DataSource>DocuParameters</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormCheckBoxControl">
+										<Name>FOSecureMalwareScanning_FOSecureBlockWhenScanUnavailable</Name>
+										<Type>CheckBox</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>FOSecureBlockWhenScanUnavailable</DataField>
+										<DataSource>DocuParameters</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>FOSecureMalwareScanning_FOSecureQuarantineStorageAccount</Name>
+										<Type>String</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>FOSecureQuarantineStorageAccount</DataField>
+										<DataSource>DocuParameters</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormStringControl">
+										<Name>FOSecureMalwareScanning_FOSecureQuarantineContainer</Name>
+										<Type>String</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>FOSecureQuarantineContainer</DataField>
+										<DataSource>DocuParameters</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormReferenceGroupControl">
+										<Name>FOSecureMalwareScanning_FOSecureQuarantineKeyVaultRef</Name>
+										<Type>ReferenceGroup</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<Controls />
+										<DataSource>DocuParameters</DataSource>
+										<ReferenceField>FOSecureQuarantineKeyVaultRef</ReferenceField>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormReferenceGroupControl">
+										<Name>FOSecureMalwareScanning_FOSecureQuarantineSasSecretRef</Name>
+										<Type>ReferenceGroup</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<Controls />
+										<DataSource>DocuParameters</DataSource>
+										<ReferenceField>FOSecureQuarantineSasSecretRef</ReferenceField>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormInt64Control">
+										<Name>FOSecureMalwareScanning_FOSecureMaxScanBytes</Name>
+										<Type>Int64</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>FOSecureMaxScanBytes</DataField>
+										<DataSource>DocuParameters</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormIntegerControl">
+										<Name>FOSecureMalwareScanning_FOSecureMaxScanWaitSeconds</Name>
+										<Type>Integer</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>FOSecureMaxScanWaitSeconds</DataField>
+										<DataSource>DocuParameters</DataSource>
+									</AxFormControl>
+								</Controls>
+								<DataGroup>FOSecureMalwareScanning</DataGroup>
+								<DataSource>DocuParameters</DataSource>
+							</AxFormControl>
+							<AxFormControl xmlns=""
+								i:type="AxFormGroupControl">
+								<Name>FOSecureContentValidation</Name>
+								<Type>Group</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+										i:type="AxFormCheckBoxControl">
+										<Name>FOSecureContentValidation_FOSecureValidateAttachmentContent</Name>
+										<Type>CheckBox</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>FOSecureValidateAttachmentContent</DataField>
+										<DataSource>DocuParameters</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormCheckBoxControl">
+										<Name>FOSecureContentValidation_FOSecureBlockActiveContent</Name>
+										<Type>CheckBox</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>FOSecureBlockActiveContent</DataField>
+										<DataSource>DocuParameters</DataSource>
+									</AxFormControl>
+									<AxFormControl xmlns=""
+										i:type="AxFormInt64Control">
+										<Name>FOSecureContentValidation_FOSecureMaxInspectBytes</Name>
+										<Type>Int64</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<DataField>FOSecureMaxInspectBytes</DataField>
+										<DataSource>DocuParameters</DataSource>
+									</AxFormControl>
+								</Controls>
+								<DataGroup>FOSecureContentValidation</DataGroup>
+								<DataSource>DocuParameters</DataSource>
+							</AxFormControl>
+						</Controls>
+						<ColumnsMode>Fill</ColumnsMode>
+						<FrameType>None</FrameType>
+					</AxFormControl>
+				</Controls>
+				<Caption>@SYS334417</Caption>
+			</FormControl>
+			<Parent>Tab</Parent>
+		</AxFormExtensionControl>
+	</Controls>
+	<DataSourceModifications />
+	<DataSourceReferences />
+	<DataSources />
+	<Parts />
+	<PropertyModifications />
+</AxFormExtension>

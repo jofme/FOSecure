@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxForm xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V6">
+	<Name>FOSecureAttachmentScan</Name>
+	<SourceCode>
+		<Methods xmlns="">
+			<Method>
+				<Name>classDeclaration</Name>
+				<Source><![CDATA[
+[Form]
+public class FOSecureAttachmentScan extends FormRun
+{
+}
+
+]]></Source>
+			</Method>
+		</Methods>
+		<DataSources xmlns="" />
+		<DataControls xmlns="" />
+		<Members xmlns="" />
+	</SourceCode>
+	<DataSources>
+		<AxFormDataSource xmlns="">
+			<Name>FOSecureAttachmentScan</Name>
+			<Table>FOSecureAttachmentScan</Table>
+			<Fields />
+			<ReferencedDataSources />
+			<AllowCreate>No</AllowCreate>
+			<AllowEdit>No</AllowEdit>
+			<AllowDelete>No</AllowDelete>
+			<InsertIfEmpty>No</InsertIfEmpty>
+			<DataSourceLinks />
+			<DerivedDataSources />
+		</AxFormDataSource>
+	</DataSources>
+	<Design>
+		<Caption xmlns="">@FOSecure:AttachmentScanTitle</Caption>
+		<DataSource xmlns="">FOSecureAttachmentScan</DataSource>
+		<Pattern xmlns="">ListPage</Pattern>
+		<PatternVersion xmlns="">UX7 1.0</PatternVersion>
+		<ShowDeleteButton xmlns="">No</ShowDeleteButton>
+		<ShowNewButton xmlns="">No</ShowNewButton>
+		<Style xmlns="">ListPage</Style>
+		<TitleDataSource xmlns="">FOSecureAttachmentScan</TitleDataSource>
+		<ViewEditMode xmlns="">View</ViewEditMode>
+		<WindowType xmlns="">ListPage</WindowType>
+		<Controls xmlns="">
+			<AxFormControl xmlns=""
+					i:type="AxFormActionPaneControl">
+				<Name>ActionPane</Name>
+				<ElementPosition>134217727</ElementPosition>
+				<FilterExpression>%1</FilterExpression>
+				<Type>ActionPane</Type>
+				<VerticalSpacing>-1</VerticalSpacing>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+							i:type="AxFormActionPaneTabControl">
+						<Name>ActionPaneTab</Name>
+						<Type>ActionPaneTab</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+									i:type="AxFormButtonGroupControl">
+								<Name>NewButtonGroup</Name>
+								<Type>ButtonGroup</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+											i:type="AxFormMenuFunctionButtonControl">
+										<Name>ScanAFileButton</Name>
+										<Type>MenuFunctionButton</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<AutoRefreshData>Yes</AutoRefreshData>
+										<MenuItemName>FOSecureMalwareScanTest</MenuItemName>
+										<MenuItemType>Action</MenuItemType>
+										<NormalImage>New</NormalImage>
+									</AxFormControl>
+								</Controls>
+								<Caption>@FOSecure:ScanAFile</Caption>
+							</AxFormControl>
+							<AxFormControl xmlns=""
+									i:type="AxFormButtonGroupControl">
+								<Name>MaintainButtonGroup</Name>
+								<Type>ButtonGroup</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<Controls>
+									<AxFormControl xmlns=""
+											i:type="AxFormMenuFunctionButtonControl">
+										<Name>UpdateScanResultsButton</Name>
+										<Type>MenuFunctionButton</Type>
+										<FormControlExtension
+											i:nil="true" />
+										<AutoRefreshData>Yes</AutoRefreshData>
+										<MenuItemName>FOSecureMalwareScanStatus</MenuItemName>
+										<MenuItemType>Action</MenuItemType>
+										<NormalImage>Refresh</NormalImage>
+									</AxFormControl>
+								</Controls>
+								<Caption>@FOSecure:UpdateScanResults</Caption>
+							</AxFormControl>
+						</Controls>
+						<Caption>@FOSecure:ScanActionsGroup</Caption>
+					</AxFormControl>
+				</Controls>
+				<AlignChild>No</AlignChild>
+				<AlignChildren>No</AlignChildren>
+				<ArrangeMethod>Vertical</ArrangeMethod>
+			</AxFormControl>
+			<AxFormControl xmlns=""
+					i:type="AxFormGroupControl">
+				<Name>CustomFilterGroup</Name>
+				<Pattern>CustomAndQuickFilters</Pattern>
+				<PatternVersion>1.1</PatternVersion>
+				<Type>Group</Type>
+				<WidthMode>SizeToAvailable</WidthMode>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl>
+						<Name>QuickFilterControl</Name>
+						<FormControlExtension>
+							<Name>QuickFilterControl</Name>
+							<ExtensionComponents />
+							<ExtensionProperties>
+								<AxFormControlExtensionProperty>
+									<Name>targetControlName</Name>
+									<Type>String</Type>
+									<Value>Grid</Value>
+								</AxFormControlExtensionProperty>
+								<AxFormControlExtensionProperty>
+									<Name>defaultColumnName</Name>
+									<Type>String</Type>
+									<Value>Grid_FileName</Value>
+								</AxFormControlExtensionProperty>
+								<AxFormControlExtensionProperty>
+									<Name>placeholderText</Name>
+									<Type>String</Type>
+								</AxFormControlExtensionProperty>
+							</ExtensionProperties>
+						</FormControlExtension>
+					</AxFormControl>
+				</Controls>
+				<ArrangeMethod>HorizontalLeft</ArrangeMethod>
+				<FrameType>None</FrameType>
+				<Style>CustomFilter</Style>
+				<ViewEditMode>Edit</ViewEditMode>
+			</AxFormControl>
+			<AxFormControl xmlns=""
+					i:type="AxFormGridControl">
+				<Name>Grid</Name>
+				<AllowEdit>No</AllowEdit>
+				<ElementPosition>1431655764</ElementPosition>
+				<FilterExpression>%1</FilterExpression>
+				<Type>Grid</Type>
+				<VerticalSpacing>-1</VerticalSpacing>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+							i:type="AxFormStringControl">
+						<Name>Grid_FileName</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>FileName</DataField>
+						<DataSource>FOSecureAttachmentScan</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+							i:type="AxFormStringControl">
+						<Name>Grid_FileType</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>FileType</DataField>
+						<DataSource>FOSecureAttachmentScan</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+							i:type="AxFormComboBoxControl">
+						<Name>Grid_ScanState</Name>
+						<AllowEdit>No</AllowEdit>
+						<Type>ComboBox</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ScanState</DataField>
+						<DataSource>FOSecureAttachmentScan</DataSource>
+						<Items />
+					</AxFormControl>
+					<AxFormControl xmlns=""
+							i:type="AxFormStringControl">
+						<Name>Grid_ScanDetail</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ScanDetail</DataField>
+						<DataSource>FOSecureAttachmentScan</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+							i:type="AxFormDateTimeControl">
+						<Name>Grid_SubmittedDateTime</Name>
+						<Type>DateTime</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>SubmittedDateTime</DataField>
+						<DataSource>FOSecureAttachmentScan</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+							i:type="AxFormDateTimeControl">
+						<Name>Grid_ResolvedDateTime</Name>
+						<Type>DateTime</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ResolvedDateTime</DataField>
+						<DataSource>FOSecureAttachmentScan</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+							i:type="AxFormInt64Control">
+						<Name>Grid_ContentLength</Name>
+						<Type>Int64</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>ContentLength</DataField>
+						<DataSource>FOSecureAttachmentScan</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+							i:type="AxFormIntegerControl">
+						<Name>Grid_PollCount</Name>
+						<Type>Integer</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>PollCount</DataField>
+						<DataSource>FOSecureAttachmentScan</DataSource>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+							i:type="AxFormStringControl">
+						<Name>Grid_Sha256</Name>
+						<Type>String</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<DataField>Sha256</DataField>
+						<DataSource>FOSecureAttachmentScan</DataSource>
+					</AxFormControl>
+				</Controls>
+				<AlternateRowShading>No</AlternateRowShading>
+				<DataSource>FOSecureAttachmentScan</DataSource>
+				<MultiSelect>No</MultiSelect>
+				<ShowRowLabels>No</ShowRowLabels>
+				<Style>Tabular</Style>
+			</AxFormControl>
+		</Controls>
+	</Design>
+	<Parts />
+</AxForm>

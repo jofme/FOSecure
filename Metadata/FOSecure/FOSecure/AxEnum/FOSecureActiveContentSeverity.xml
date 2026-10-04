@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxEnum xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>FOSecureActiveContentSeverity</Name>
+	<Label>@FOSecure:ActiveContentSeverityEnum</Label>
+	<UseEnumValue>No</UseEnumValue>
+	<EnumValues>
+		<AxEnumValue>
+			<Name>None</Name>
+			<Label>@FOSecure:SeverityNone</Label>
+			<HelpText>@FOSecure:SeverityNone</HelpText>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Informational</Name>
+			<Label>@FOSecure:SeverityInformational</Label>
+			<HelpText>@FOSecure:SeverityInformational</HelpText>
+			<Value>1</Value>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Unassessable</Name>
+			<Label>@FOSecure:SeverityUnassessable</Label>
+			<HelpText>@FOSecure:SeverityUnassessable</HelpText>
+			<Value>2</Value>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Suspicious</Name>
+			<Label>@FOSecure:SeveritySuspicious</Label>
+			<HelpText>@FOSecure:SeveritySuspicious</HelpText>
+			<Value>3</Value>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Blocking</Name>
+			<Label>@FOSecure:SeverityBlocking</Label>
+			<HelpText>@FOSecure:SeverityBlocking</HelpText>
+			<Value>4</Value>
+		</AxEnumValue>
+	</EnumValues>
+</AxEnum>

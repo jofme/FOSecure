@@ -1,0 +1,106 @@
+﻿/// <summary>
+/// Form event handlers for the Document management parameters page.
+/// </summary>
+public final class FOSecureDocuParametersEventHandler
+{
+    private FormDataSource docuParametersDataSource;
+
+    /// <summary>
+    /// Gets or sets the <c>DocuParameters</c> data source the secret lookup reads its context from.
+    /// </summary>
+    /// <param name = "_docuParametersDataSource">The <c>DocuParameters</c> form data source.</param>
+    /// <returns>The <c>DocuParameters</c> form data source.</returns>
+    public FormDataSource parmDocuParametersDataSource(FormDataSource _docuParametersDataSource = docuParametersDataSource)
+    {
+        docuParametersDataSource = _docuParametersDataSource;
+
+        return docuParametersDataSource;
+    }
+
+    /// <summary>
+    /// Registers the Key Vault scoped lookup on the quarantine SAS secret parameter.
+    /// </summary>
+    /// <param name = "_sender">The <c>DocuParameters</c> form data source.</param>
+    /// <param name = "_e">Event arguments.</param>
+    [FormDataSourceEventHandler(formDataSourceStr(DocuParameters, DocuParameters), FormDataSourceEventType::Initialized), SuppressBPWarning('BPParameterNotUsed', 'The event handler signature is fixed by the form framework.')]
+    public static void DocuParameters_OnInitialized(FormDataSource _sender, FormDataSourceEventArgs _e)
+    {
+        FOSecureDocuParametersEventHandler handler = new FOSecureDocuParametersEventHandler();
+
+        handler.parmDocuParametersDataSource(_sender);
+
+        _sender.object(fieldNum(DocuParameters, FOSecureQuarantineSasSecretRef)).registerOverrideMethod(
+            methodStr(FormDataObject, lookupReference),
+            methodStr(FOSecureDocuParametersEventHandler, quarantineSasSecretLookupReference),
+            handler);
+    }
+
+    /// <summary>
+    /// Lists only the manual secrets that belong to the configured Key Vault.
+    /// </summary>
+    /// <param name = "_formReferenceControl">The quarantine SAS secret reference control.</param>
+    /// <returns>The selected <c>KeyVaultCertificateTable</c> record.</returns>
+    public Common quarantineSasSecretLookupReference(FormReferenceControl _formReferenceControl)
+    {
+        DocuParameters          parameters = docuParametersDataSource.cursor();
+        Query                   query = new Query();
+        QueryBuildDataSource    queryBuildDataSource;
+        SysReferenceTableLookup lookup;
+
+        queryBuildDataSource = query.addDataSource(tableNum(KeyVaultCertificateTable));
+
+        queryBuildDataSource.addRange(fieldNum(KeyVaultCertificateTable, KeyVaultCertificateType))
+            .value(queryValue(KeyVaultCertificateType::Manual));
+
+        if (parameters.FOSecureQuarantineKeyVaultRef)
+        {
+            queryBuildDataSource.addRange(fieldNum(KeyVaultCertificateTable, KeyVaultRef))
+                .value(queryValue(parameters.FOSecureQuarantineKeyVaultRef));
+        }
+
+        lookup = SysReferenceTableLookup::newParameters(tableNum(KeyVaultCertificateTable), _formReferenceControl);
+
+        lookup.parmQuery(query);
+        lookup.addLookupfield(fieldNum(KeyVaultCertificateTable, Name));
+        lookup.addLookupfield(fieldNum(KeyVaultCertificateTable, Description));
+
+        return lookup.performFormLookup();
+    }
+
+    /// <summary>
+    /// Clears the quarantine SAS secret when it does not belong to the newly selected Key Vault.
+    /// </summary>
+    /// <param name = "_sender">The Key Vault reference data object.</param>
+    /// <param name = "_e">Event arguments.</param>
+    [FormDataFieldEventHandler(formDataFieldStr(DocuParameters, DocuParameters, FOSecureQuarantineKeyVaultRef), FormDataFieldEventType::Modified), SuppressBPWarning('BPParameterNotUsed', 'The event handler signature is fixed by the form framework.')]
+    public static void FOSecureQuarantineKeyVaultRef_OnModified(FormDataObject _sender, FormDataFieldEventArgs _e)
+    {
+        FormDataSource              formDataSource = _sender.datasource();
+        DocuParameters              parameters = formDataSource.cursor();
+        KeyVaultCertificateTable    secret = KeyVaultCertificateTable::findRecId(parameters.FOSecureQuarantineSasSecretRef);
+
+        if (secret && secret.KeyVaultRef != parameters.FOSecureQuarantineKeyVaultRef)
+        {
+            parameters.FOSecureQuarantineSasSecretRef = 0;
+        }
+    }
+
+    /// <summary>
+    /// Fills in the Key Vault from the chosen secret while no vault has been selected.
+    /// </summary>
+    /// <param name = "_sender">The quarantine SAS secret reference data object.</param>
+    /// <param name = "_e">Event arguments.</param>
+    [FormDataFieldEventHandler(formDataFieldStr(DocuParameters, DocuParameters, FOSecureQuarantineSasSecretRef), FormDataFieldEventType::Modified), SuppressBPWarning('BPParameterNotUsed', 'The event handler signature is fixed by the form framework.')]
+    public static void FOSecureQuarantineSasSecretRef_OnModified(FormDataObject _sender, FormDataFieldEventArgs _e)
+    {
+        FormDataSource              formDataSource = _sender.datasource();
+        DocuParameters              parameters = formDataSource.cursor();
+        KeyVaultCertificateTable    secret = KeyVaultCertificateTable::findRecId(parameters.FOSecureQuarantineSasSecretRef);
+
+        if (secret && !parameters.FOSecureQuarantineKeyVaultRef)
+        {
+            parameters.FOSecureQuarantineKeyVaultRef = secret.KeyVaultRef;
+        }
+    }
+
+}

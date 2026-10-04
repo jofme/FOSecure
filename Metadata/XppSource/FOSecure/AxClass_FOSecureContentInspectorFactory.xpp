@@ -1,0 +1,39 @@
+﻿/// <summary>
+/// Chooses the inspector that can refine a detected format.
+/// </summary>
+public final class FOSecureContentInspectorFactory
+{
+    /// <summary>
+    /// The inspector for a detected format.
+    /// </summary>
+    /// <param name = "_detectedExtension">The extension the signature table reported.</param>
+    /// <returns>An inspector, or null when nothing can refine this format.</returns>
+    /// <remarks>
+    /// Keyed on what the content was DETECTED as, never on what the file claims. Extend by
+    /// wrapping this method with chain of command.
+    /// </remarks>
+    public static FOSecureContentInspector inspectorFor(str _detectedExtension)
+    {
+        switch (FOSecureContentCheck::normalize(_detectedExtension))
+        {
+            case 'pdf':
+                return new FOSecureContentInspectorPdf();
+
+                // Every OOXML and Open Document package, every Java and Android archive.
+            case 'zip':
+                return new FOSecureContentInspectorZip();
+
+                // The whole compound document family reports as doc from the signature table.
+            case 'doc':
+                return new FOSecureContentInspectorOle2();
+
+            case 'xml':
+            case 'html':
+            case 'svg':
+                return new FOSecureContentInspectorMarkup();
+        }
+
+        return null;
+    }
+
+}

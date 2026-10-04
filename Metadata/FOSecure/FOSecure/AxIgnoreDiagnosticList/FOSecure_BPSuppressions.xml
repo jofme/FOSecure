@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<IgnoreDiagnostics xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>FOSecure_BPSuppressions</Name>
+	<Items>
+		<Diagnostic>
+			<DiagnosticType>BestPractices</DiagnosticType>
+			<Severity>Warning</Severity>
+			<Path>dynamics://TableExtension/DocuParameters.FOSecureExtension</Path>
+			<Moniker>BPCheckNumberofNewFields</Moniker>
+			<Message>Number of new fields in base table DocuParameters.FOSecureExtension is greater than 10</Message>
+			<Justification>The rule counts fields added by over-layering. These 11 are an extension's own parameters for attachment content validation and malware scanning, each surfaced on the Document management parameters page; splitting them across a second table would add a join and a second record to maintain for no benefit.</Justification>
+		</Diagnostic>
+	</Items>
+</IgnoreDiagnostics>

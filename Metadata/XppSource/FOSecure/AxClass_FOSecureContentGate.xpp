@@ -1,0 +1,277 @@
+﻿/// <summary>
+/// Decides what happens to an attachment and records the decision.
+/// </summary>
+public final class FOSecureContentGate
+{
+    /// <summary>
+    /// How much of an attachment to read, from the configured value.
+    /// </summary>
+    /// <param name = "_parameters">Document management parameters.</param>
+    /// <returns>A byte count inside the supported range.</returns>
+    public static int windowBytes(DocuParameters _parameters)
+    {
+        int64 configured = _parameters.FOSecureMaxInspectBytes;
+
+        if (configured <= 0)
+        {
+            return FOSecureContentConstants::DefaultInspectBytes;
+        }
+
+        if (configured < FOSecureContentConstants::MinInspectBytes)
+        {
+            return FOSecureContentConstants::MinInspectBytes;
+        }
+
+        if (configured > FOSecureContentConstants::MaxInspectBytes)
+        {
+            return FOSecureContentConstants::MaxInspectBytes;
+        }
+
+        return any2Int(configured);
+    }
+
+    /// <summary>
+    /// Whether a verdict rejects the attachment.
+    /// </summary>
+    /// <param name = "_outcome">The content versus extension outcome.</param>
+    /// <param name = "_severity">The highest active content severity found.</param>
+    /// <param name = "_blockActiveContent">Whether the administrator enabled blocking.</param>
+    /// <returns>true when the attachment must not be used.</returns>
+    public static boolean rejectsOn(
+        FOSecureContentCheckOutcome   _outcome,
+        FOSecureActiveContentSeverity _severity,
+        NoYes                         _blockActiveContent)
+    {
+        if (_outcome == FOSecureContentCheckOutcome::Mismatch)
+        {
+            return true;
+        }
+
+        return _blockActiveContent == NoYes::Yes && FOSecureActiveContentPolicy::blocks(_severity);
+    }
+
+    /// <summary>
+    /// Reports every reason the attachment is unacceptable, then rejects it once.
+    /// </summary>
+    /// <param name = "_docuValue">The stored file.</param>
+    /// <param name = "_outcome">The content versus extension outcome.</param>
+    /// <param name = "_detectedType">What the content was identified as.</param>
+    /// <param name = "_severity">The highest active content severity found.</param>
+    /// <param name = "_findings">The findings, already resolved to text.</param>
+    /// <param name = "_blockActiveContent">Whether the administrator enabled blocking.</param>
+    /// <param name = "_validationResult">Rejected when the file must not be used.</param>
+    /// <returns>true when the attachment was rejected.</returns>
+    /// <remarks>
+    /// The messages go through <c>FOSecureGateMessage</c> because the same attachment is scanned more
+    /// than once per interaction; the rejection itself is unconditional.
+    /// </remarks>
+    private static boolean enforce(
+        DocuValue                     _docuValue,
+        FOSecureContentCheckOutcome   _outcome,
+        str                           _detectedType,
+        FOSecureActiveContentSeverity _severity,
+        str                           _findings,
+        NoYes                         _blockActiveContent,
+        EventHandlerRejectResult      _validationResult)
+    {
+        boolean rejected;
+
+        if (_outcome == FOSecureContentCheckOutcome::Mismatch)
+        {
+            FOSecureGateMessage::reportOnce(strFmt("@FOSecure:AttachmentContentMismatch",
+                _docuValue.FileName, _docuValue.FileType, _detectedType));
+
+            rejected = true;
+        }
+
+        if (_blockActiveContent == NoYes::Yes && FOSecureActiveContentPolicy::blocks(_severity))
+        {
+            FOSecureGateMessage::reportOnce(strFmt("@FOSecure:AttachmentActiveContentBlocked", _docuValue.FileName, _findings));
+
+            rejected = true;
+        }
+
+        if (rejected)
+        {
+            _validationResult.reject();
+        }
+
+        return rejected;
+    }
+
+    /// <summary>
+    /// Applies a verdict recorded earlier, without reading the file.
+    /// </summary>
+    /// <param name = "_docuValue">The stored file.</param>
+    /// <param name = "_parameters">Document management parameters.</param>
+    /// <param name = "_validationResult">Rejected when the recorded verdict says so.</param>
+    /// <returns>true when a current verdict existed and was applied.</returns>
+    public static boolean applyRecordedVerdict(
+        DocuValue                _docuValue,
+        DocuParameters           _parameters,
+        EventHandlerRejectResult _validationResult)
+    {
+        FOSecureAttachmentInspection recorded = FOSecureAttachmentInspection::findCurrentByFileId(
+            _docuValue.FileId, FOSecureContentCheck::inspectorVersion());
+
+        if (!recorded.RecId)
+        {
+            return false;
+        }
+
+        FOSecureContentGate::enforce(
+            _docuValue,
+            recorded.CheckOutcome,
+            recorded.DetectedType,
+            recorded.ActiveContentSeverity,
+            recorded.activeContentDescription(),
+            _parameters.FOSecureBlockActiveContent,
+            _validationResult);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Writes the verdict for a stored file.
+    /// </summary>
+    /// <param name = "_docuRef">The attachment being inspected.</param>
+    /// <param name = "_docuValue">The stored file behind it.</param>
+    /// <param name = "_window">The content that was inspected.</param>
+    /// <param name = "_sha256">The hash of the whole file, or empty when it could not be taken.</param>
+    /// <param name = "_checkResult">The content versus extension outcome.</param>
+    /// <param name = "_inspection">What the inspectors concluded.</param>
+    /// <param name = "_severity">The rated severity.</param>
+    /// <remarks>
+    /// Written on a connection of its own, for the reason given on
+    /// <c>FOSecureMalwareScanManager</c>.upsertScanRow: the upload rejects inside a transaction it
+    /// then abandons, and an inner ttscommit is discarded with it.
+    /// </remarks>
+    private static void record(
+        DocuRef                       _docuRef,
+        DocuValue                     _docuValue,
+        FOSecureContentWindow         _window,
+        FOSecureFileHash              _sha256,
+        FOSecureContentCheckResult    _checkResult,
+        FOSecureContentInspection     _inspection,
+        FOSecureActiveContentSeverity _severity)
+    {
+        FOSecureAttachmentInspection row;
+        UserConnection               logConnection;
+        boolean                      isNew;
+
+        if (_docuValue.FileId == emptyGuid())
+        {
+            return;
+        }
+
+        logConnection = new UserConnection();
+
+        try
+        {
+            row.setConnection(logConnection);
+
+            logConnection.ttsbegin();
+
+            select firstonly forupdate row
+                where row.FileId == _docuValue.FileId;
+
+            isNew = !row.RecId;
+
+            row.FileId                = _docuValue.FileId;
+            row.DocuRefRecId          = _docuRef.RecId;
+            row.RefTableId            = _docuRef.RefTableId;
+            row.RefRecId              = _docuRef.RefRecId;
+            row.FileName              = _docuValue.FileName;
+            row.FileType              = _docuValue.FileType;
+            row.ContentLength         = _window.length();
+            row.Sha256                = _sha256;
+            row.DetectedExtension     = _inspection.refinedExtension();
+            row.DetectedType          = _checkResult.describeDetectedType();
+            row.IsExact               = _inspection.isExact() ? NoYes::Yes : NoYes::No;
+            row.CheckOutcome          = _checkResult.outcome();
+            row.ActiveContentSeverity = _severity;
+            row.FindingLabels         = _inspection.findings().labelIds();
+            row.FindingCount          = _inspection.findings().elements();
+            row.InspectedDateTime     = DateTimeUtil::utcNow();
+            row.InspectorVersion      = FOSecureContentCheck::inspectorVersion();
+            row.BytesInspected        = _window.headLength();
+            row.Truncated             = _window.isTruncated() ? NoYes::Yes : NoYes::No;
+
+            if (isNew)
+            {
+                row.insert();
+            }
+            else
+            {
+                row.update();
+            }
+
+            logConnection.ttscommit();
+        }
+        catch (Exception::DuplicateKeyException)
+        {
+            // Another preview stored the same verdict; nothing to retry.
+            exceptionTextFallThrough();
+        }
+        catch (Exception::CLRError)
+        {
+            exceptionTextFallThrough();
+        }
+        catch (Exception::Error)
+        {
+            exceptionTextFallThrough();
+        }
+        finally
+        {
+            logConnection.finalize();
+        }
+    }
+
+    /// <summary>
+    /// Inspects content, records what it concluded, and enforces it.
+    /// </summary>
+    /// <param name = "_docuRef">The attachment being inspected.</param>
+    /// <param name = "_docuValue">The stored file behind it.</param>
+    /// <param name = "_window">The content, already read.</param>
+    /// <param name = "_sha256">The hash of the whole file, taken by the caller that held the stream.</param>
+    /// <param name = "_parameters">Document management parameters.</param>
+    /// <param name = "_validationResult">Rejected when the file must not be used.</param>
+    public static void inspectRecordAndEnforce(
+        DocuRef                  _docuRef,
+        DocuValue                _docuValue,
+        FOSecureContentWindow    _window,
+        FOSecureFileHash         _sha256,
+        DocuParameters           _parameters,
+        EventHandlerRejectResult _validationResult)
+    {
+        FOSecureContentInspection     inspection;
+        FOSecureContentCheckResult    checkResult;
+        FOSecureActiveContentSeverity severity;
+
+        if (_window == null || _window.isEmpty())
+        {
+            return;
+        }
+
+        inspection  = FOSecureContentCheck::examine(_window, _docuValue.FileType);
+        checkResult = FOSecureContentCheck::compare(_window, _docuValue.FileType, inspection);
+        severity    = FOSecureActiveContentPolicy::highestSeverity(inspection.findings(), _docuValue.FileType);
+
+        if (!inspection.isAssessable() && severity == FOSecureActiveContentSeverity::None)
+        {
+            severity = FOSecureActiveContentSeverity::Unassessable;
+        }
+
+        FOSecureContentGate::record(_docuRef, _docuValue, _window, _sha256, checkResult, inspection, severity);
+
+        FOSecureContentGate::enforce(
+            _docuValue,
+            checkResult.outcome(),
+            checkResult.describeDetectedType(),
+            severity,
+            inspection.findings().describe(),
+            _parameters.FOSecureBlockActiveContent,
+            _validationResult);
+    }
+
+}

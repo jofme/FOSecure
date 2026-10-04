@@ -1,0 +1,568 @@
+﻿/// <summary>
+/// A bounded view over the start and end of a file, addressed by absolute byte offset.
+/// </summary>
+public final class FOSecureContentWindow
+{
+    private System.Byte[] headBuffer;
+    private str headView;
+    private str tailView;
+    private int64 contentLength;
+    private int headByteCount;
+    private int64 tailStartOffset;
+    private boolean contentTruncated;
+
+    /// <summary>
+    /// Initializes an empty window. Use the factories.
+    /// </summary>
+    private void new()
+    {
+    }
+
+    /// <summary>
+    /// Renders a buffer as ISO-8859-1 text.
+    /// </summary>
+    /// <param name = "_buffer">The bytes.</param>
+    /// <param name = "_length">How many are meaningful.</param>
+    /// <returns>The text, or an empty string.</returns>
+    private static str decode(System.Byte[] _buffer, int _length)
+    {
+        if (_buffer == null || _length <= 0)
+        {
+            return '';
+        }
+
+        return System.Text.Encoding::GetEncoding(FOSecureContentConstants::Latin1CodePage)
+            .GetString(_buffer, 0, _length);
+    }
+
+    /// <summary>
+    /// Reads until the buffer is full or the stream ends.
+    /// </summary>
+    /// <param name = "_stream">The stream, positioned where reading begins.</param>
+    /// <param name = "_buffer">The buffer to fill.</param>
+    /// <param name = "_byteCount">How many bytes to read.</param>
+    /// <returns>How many bytes were read.</returns>
+    private static int readFully(System.IO.Stream _stream, System.Byte[] _buffer, int _byteCount)
+    {
+        int total;
+        int read;
+
+        while (total < _byteCount)
+        {
+            read = _stream.Read(_buffer, total, _byteCount - total);
+
+            if (read <= 0)
+            {
+                break;
+            }
+
+            total += read;
+        }
+
+        return total;
+    }
+
+    /// <summary>
+    /// The ordinal comparison every search in this class uses.
+    /// </summary>
+    /// <param name = "_caseSensitive">Whether case must match.</param>
+    /// <returns>An ordinal StringComparison.</returns>
+    private static System.StringComparison comparison(boolean _caseSensitive)
+    {
+        if (_caseSensitive)
+        {
+            return System.StringComparison::Ordinal;
+        }
+
+        return System.StringComparison::OrdinalIgnoreCase;
+    }
+
+    /// <summary>
+    /// Builds a window over a stream, restoring the position it was given.
+    /// </summary>
+    /// <param name = "_stream">Readable, seekable content.</param>
+    /// <param name = "_headBytes">How much of the start to hold.</param>
+    /// <param name = "_tailBytes">How much of the end to hold, beyond the head.</param>
+    /// <returns>A window. Never null; an unusable stream yields an empty one.</returns>
+    public static FOSecureContentWindow fromStream(System.IO.Stream _stream, int _headBytes, int _tailBytes)
+    {
+        FOSecureContentWindow window = new FOSecureContentWindow();
+        System.Byte[]         tailBuffer;
+        int64                 originalPosition;
+        int64                 totalLength;
+        int64                 remaining;
+        int                   headTake;
+        int                   tailTake;
+        int                   headRead;
+
+        if (_stream == null || !_stream.CanRead || !_stream.CanSeek || _headBytes <= 0)
+        {
+            return window;
+        }
+
+        try
+        {
+            originalPosition = _stream.Position;
+            totalLength      = _stream.Length;
+        }
+        catch (Exception::CLRError)
+        {
+            // Disposed or unusable: nothing to restore.
+            return window;
+        }
+
+        try
+        {
+            headTake  = totalLength < _headBytes ? any2Int(totalLength) : _headBytes;
+            remaining = totalLength - headTake;
+            tailTake  = remaining <= 0 || _tailBytes <= 0
+                ? 0
+                : (remaining < _tailBytes ? any2Int(remaining) : _tailBytes);
+
+            window.contentLength    = totalLength;
+            window.headByteCount    = headTake;
+            window.tailStartOffset  = totalLength - tailTake;
+            window.contentTruncated = totalLength > headTake + tailTake;
+
+            if (headTake > 0)
+            {
+                window.headBuffer    = new System.Byte[headTake]();
+                _stream.Position     = 0;
+                headRead             = FOSecureContentWindow::readFully(_stream, window.headBuffer, headTake);
+                window.headByteCount = headRead;
+                window.headView      = FOSecureContentWindow::decode(window.headBuffer, headRead);
+            }
+
+            if (tailTake > 0)
+            {
+                tailBuffer       = new System.Byte[tailTake]();
+                _stream.Position = window.tailStartOffset;
+                window.tailView  = FOSecureContentWindow::decode(
+                    tailBuffer, FOSecureContentWindow::readFully(_stream, tailBuffer, tailTake));
+            }
+        }
+        catch (Exception::CLRError)
+        {
+            exceptionTextFallThrough();
+        }
+        catch (Exception::Error)
+        {
+            exceptionTextFallThrough();
+        }
+        finally
+        {
+            try
+            {
+                // The malware submission reads this stream next; an advanced position truncates it.
+                _stream.Position = originalPosition;
+            }
+            catch (Exception::CLRError)
+            {
+                exceptionTextFallThrough();
+            }
+        }
+
+        return window;
+    }
+
+    /// <summary>
+    /// Builds a window over a string, one character per byte.
+    /// </summary>
+    /// <param name = "_text">The content.</param>
+    /// <returns>A window holding the whole string as its head.</returns>
+    public static FOSecureContentWindow fromAscii(str _text)
+    {
+        FOSecureContentWindow window = new FOSecureContentWindow();
+        int                   textLength = strLen(_text);
+
+        window.headBuffer = System.Text.Encoding::GetEncoding(FOSecureContentConstants::Latin1CodePage)
+            .GetBytes(_text);
+        window.headView        = _text;
+        window.headByteCount   = textLength;
+        window.contentLength   = textLength;
+        window.tailStartOffset = textLength;
+
+        return window;
+    }
+
+    /// <summary>
+    /// Builds a window from a hex string such as '25504446'.
+    /// </summary>
+    /// <param name = "_hex">Hex digits, optionally separated by spaces or dashes.</param>
+    /// <returns>A window over those bytes.</returns>
+    public static FOSecureContentWindow fromHex(str _hex)
+    {
+        str packed = strUpr(strRem(strRem(_hex, '-'), ' '));
+        str text;
+        int i;
+
+        for (i = 1; i + 1 <= strLen(packed); i += 2)
+        {
+            text += num2Char(hex2Int(subStr(packed, i, 2)));
+        }
+
+        return FOSecureContentWindow::fromAscii(text);
+    }
+
+    /// <summary>
+    /// Spreads an ASCII token into UTF-16LE.
+    /// </summary>
+    /// <param name = "_token">The token, written normally.</param>
+    /// <returns>The token with a NUL after every character.</returns>
+    public static str widenToUtf16Le(str _token)
+    {
+        str widened;
+        int i;
+
+        for (i = 1; i <= strLen(_token); i++)
+        {
+            widened += subStr(_token, i, 1) + num2Char(0);
+        }
+
+        return widened;
+    }
+
+    /// <summary>
+    /// Finds a token in a string using an ordinal comparison.
+    /// </summary>
+    /// <param name = "_text">The text to search.</param>
+    /// <param name = "_token">The token to find.</param>
+    /// <param name = "_fromIndex">The zero based index to start from.</param>
+    /// <param name = "_caseSensitive">Whether case must match.</param>
+    /// <returns>The zero based index of the first hit, or -1.</returns>
+    public static int indexOfOrdinal(str _text, str _token, int _fromIndex = 0, boolean _caseSensitive = false)
+    {
+        System.String clrText;
+        int           textLength  = strLen(_text);
+        int           tokenLength = strLen(_token);
+        int           startAt     = _fromIndex > 0 ? _fromIndex : 0;
+
+        if (!textLength || !tokenLength || startAt + tokenLength > textLength)
+        {
+            return FOSecureContentConstants::NotFound;
+        }
+
+        clrText = _text;
+
+        return clrText.IndexOf(_token, startAt, FOSecureContentWindow::comparison(_caseSensitive));
+    }
+
+    /// <summary>
+    /// Finds a token, taking and returning a one based position.
+    /// </summary>
+    /// <param name = "_text">The text to search.</param>
+    /// <param name = "_token">The token to find.</param>
+    /// <param name = "_onePosition">The one based position to start from.</param>
+    /// <param name = "_caseSensitive">Whether case must match.</param>
+    /// <returns>The one based position of the hit, or 0.</returns>
+    public static int indexOfOrdinalOneBased(
+        str     _text,
+        str     _token,
+        int     _onePosition = 1,
+        boolean _caseSensitive = false)
+    {
+        int zeroBased = FOSecureContentWindow::indexOfOrdinal(
+            _text, _token, _onePosition - 1, _caseSensitive);
+
+        return zeroBased < 0 ? 0 : zeroBased + 1;
+    }
+
+    /// <summary>
+    /// The byte at an absolute offset.
+    /// </summary>
+    /// <param name = "_offset">An absolute byte offset.</param>
+    /// <returns>0..255, or -1 when the offset is not in the window.</returns>
+    public int byteAt(int64 _offset)
+    {
+        if (_offset >= 0 && _offset < headByteCount)
+        {
+            return char2Num(headView, any2Int(_offset) + 1);
+        }
+
+        if (tailView && _offset >= tailStartOffset && _offset < contentLength)
+        {
+            return char2Num(tailView, any2Int(_offset - tailStartOffset) + 1);
+        }
+
+        return FOSecureContentConstants::NotFound;
+    }
+
+    /// <summary>
+    /// Reads a little endian unsigned 16 bit value.
+    /// </summary>
+    /// <param name = "_offset">An absolute byte offset.</param>
+    /// <returns>The value, or -1 when it is not fully in the window.</returns>
+    public int readUInt16Le(int64 _offset)
+    {
+        int low  = this.byteAt(_offset);
+        int high = this.byteAt(_offset + 1);
+
+        if (low == FOSecureContentConstants::NotFound || high == FOSecureContentConstants::NotFound)
+        {
+            return FOSecureContentConstants::NotFound;
+        }
+
+        return low + high * FOSecureContentConstants::ByteValues;
+    }
+
+    /// <summary>
+    /// Reads a little endian unsigned 32 bit value.
+    /// </summary>
+    /// <param name = "_offset">An absolute byte offset.</param>
+    /// <returns>The value, or -1 when it is not fully in the window.</returns>
+    /// <remarks>
+    /// int64 because an X++ int is signed and ZIP's ZIP64 sentinel is 0xFFFFFFFF.
+    /// </remarks>
+    public int64 readUInt32Le(int64 _offset)
+    {
+        const int Uint32ByteCount = 4;
+
+        int64 value;
+        int   octet;
+        int   i;
+
+        for (i = Uint32ByteCount - 1; i >= 0; i--)
+        {
+            octet = this.byteAt(_offset + i);
+
+            if (octet == FOSecureContentConstants::NotFound)
+            {
+                return FOSecureContentConstants::NotFound;
+            }
+
+            value = value * FOSecureContentConstants::ByteValues + octet;
+        }
+
+        return value;
+    }
+
+    /// <summary>
+    /// The text at an absolute offset.
+    /// </summary>
+    /// <param name = "_offset">An absolute byte offset.</param>
+    /// <param name = "_length">How many bytes to take.</param>
+    /// <returns>The text, or an empty string when the range spans both views.</returns>
+    public str textAt(int64 _offset, int _length)
+    {
+        if (_length <= 0 || _offset < 0)
+        {
+            return '';
+        }
+
+        if (_offset + _length <= headByteCount)
+        {
+            return subStr(headView, any2Int(_offset) + 1, _length);
+        }
+
+        if (tailView && _offset >= tailStartOffset && _offset + _length <= contentLength)
+        {
+            return subStr(tailView, any2Int(_offset - tailStartOffset) + 1, _length);
+        }
+
+        return '';
+    }
+
+    /// <summary>
+    /// Finds a token in the head view.
+    /// </summary>
+    /// <param name = "_token">The token to find.</param>
+    /// <param name = "_fromOffset">The absolute offset to start from.</param>
+    /// <param name = "_caseSensitive">Whether case must match.</param>
+    /// <returns>The absolute byte offset of the first hit, or -1.</returns>
+    public int64 indexOfInHead(str _token, int64 _fromOffset = 0, boolean _caseSensitive = false)
+    {
+        if (!headByteCount)
+        {
+            return FOSecureContentConstants::NotFound;
+        }
+
+        return FOSecureContentWindow::indexOfOrdinal(
+            headView, _token, _fromOffset > 0 ? any2Int(_fromOffset) : 0, _caseSensitive);
+    }
+
+    /// <summary>
+    /// Finds the last occurrence of a token in the tail view.
+    /// </summary>
+    /// <param name = "_token">The token to find.</param>
+    /// <param name = "_caseSensitive">Whether case must match.</param>
+    /// <returns>The absolute byte offset of the last hit, or -1.</returns>
+    public int64 lastIndexOfInTail(str _token, boolean _caseSensitive = false)
+    {
+        System.String clrTail;
+        int           found;
+
+        if (!strLen(_token) || !tailView)
+        {
+            return FOSecureContentConstants::NotFound;
+        }
+
+        clrTail = tailView;
+        found   = clrTail.LastIndexOf(_token, FOSecureContentWindow::comparison(_caseSensitive));
+
+        return found < 0 ? FOSecureContentConstants::NotFound : tailStartOffset + found;
+    }
+
+    /// <summary>
+    /// Determines whether a token sits at exactly this absolute offset.
+    /// </summary>
+    /// <param name = "_offset">An absolute byte offset.</param>
+    /// <param name = "_token">The token to compare against.</param>
+    /// <param name = "_caseSensitive">Whether case must match.</param>
+    /// <returns>true when the bytes at that offset are the token.</returns>
+    public boolean matchesAsciiAt(int64 _offset, str _token, boolean _caseSensitive = false)
+    {
+        str candidate = this.textAt(_offset, strLen(_token));
+
+        if (strLen(candidate) != strLen(_token))
+        {
+            return false;
+        }
+
+        return System.String::Equals(candidate, _token, FOSecureContentWindow::comparison(_caseSensitive));
+    }
+
+    /// <summary>
+    /// Finds an ASCII token stored as UTF-16LE in the head view.
+    /// </summary>
+    /// <param name = "_token">The token, written normally.</param>
+    /// <param name = "_fromOffset">The absolute offset to start from.</param>
+    /// <returns>The absolute byte offset of the first hit, or -1.</returns>
+    public int64 indexOfUtf16LeInHead(str _token, int64 _fromOffset = 0)
+    {
+        return this.indexOfInHead(FOSecureContentWindow::widenToUtf16Le(_token), _fromOffset, true);
+    }
+
+    /// <summary>
+    /// The leading bytes as uppercase hex without separators.
+    /// </summary>
+    /// <param name = "_byteCount">How many leading bytes to render.</param>
+    /// <returns>The hex, or an empty string.</returns>
+    /// <remarks>
+    /// The one place hex survives: FOSecureContentCheck::matchHeader compares hex literals.
+    /// </remarks>
+    public str headHex(int _byteCount)
+    {
+        int takeBytes = _byteCount < headByteCount ? _byteCount : headByteCount;
+
+        if (takeBytes <= 0 || headBuffer == null)
+        {
+            return '';
+        }
+
+        return strUpr(strRem(System.BitConverter::ToString(headBuffer, 0, takeBytes), '-'));
+    }
+
+    /// <summary>
+    /// A copy of a range of head bytes.
+    /// </summary>
+    /// <param name = "_offset">An absolute byte offset.</param>
+    /// <param name = "_length">How many bytes to copy.</param>
+    /// <returns>The slice, or null when the range is not available.</returns>
+    public System.Byte[] bytes(int64 _offset, int _length)
+    {
+        System.Byte[] slice;
+
+        if (headBuffer == null || _length <= 0 || _offset < 0 || _offset + _length > headByteCount)
+        {
+            return null;
+        }
+
+        slice = new System.Byte[_length]();
+        System.Array::Copy(headBuffer, any2Int(_offset), slice, 0, _length);
+
+        return slice;
+    }
+
+    /// <summary>
+    /// The length of the whole file, which may exceed what the window holds.
+    /// </summary>
+    /// <returns>The length in bytes.</returns>
+    public int64 length()
+    {
+        return contentLength;
+    }
+
+    /// <summary>
+    /// How many bytes of the start of the file the window holds.
+    /// </summary>
+    /// <returns>The head length in bytes.</returns>
+    public int headLength()
+    {
+        return headByteCount;
+    }
+
+    /// <summary>
+    /// The absolute offset at which the tail view begins.
+    /// </summary>
+    /// <returns>The offset, equal to the file length when there is no tail.</returns>
+    public int64 tailStart()
+    {
+        return tailStartOffset;
+    }
+
+    /// <summary>
+    /// Whether content between the head and the tail was not read.
+    /// </summary>
+    /// <returns>true when a finding could have been missed.</returns>
+    public boolean isTruncated()
+    {
+        return contentTruncated;
+    }
+
+    /// <summary>
+    /// Whether the window holds nothing at all.
+    /// </summary>
+    /// <returns>true when there is nothing to inspect.</returns>
+    public boolean isEmpty()
+    {
+        return headByteCount == 0;
+    }
+
+    /// <summary>
+    /// Whether a character code is whitespace.
+    /// </summary>
+    /// <param name = "_code">The character code.</param>
+    /// <returns>true for space, tab, newline, return or form feed.</returns>
+    public static boolean isSpace(int _code)
+    {
+        return _code == FOSecureContentConstants::Space
+            || _code == FOSecureContentConstants::Tab
+            || _code == FOSecureContentConstants::LineFeed
+            || _code == FOSecureContentConstants::CarriageReturn
+            || _code == FOSecureContentConstants::FormFeed;
+    }
+
+    /// <summary>
+    /// Whether a character code is an ASCII letter.
+    /// </summary>
+    /// <param name = "_code">The character code.</param>
+    /// <returns>true for A-Z or a-z.</returns>
+    public static boolean isAsciiLetter(int _code)
+    {
+        return (_code >= FOSecureContentConstants::UpperA && _code <= FOSecureContentConstants::UpperZ)
+            || (_code >= FOSecureContentConstants::LowerA && _code <= FOSecureContentConstants::LowerZ);
+    }
+
+    /// <summary>
+    /// Whether a character code is an ASCII digit.
+    /// </summary>
+    /// <param name = "_code">The character code.</param>
+    /// <returns>true for 0-9.</returns>
+    public static boolean isDigit(int _code)
+    {
+        return _code >= FOSecureContentConstants::Digit0 && _code <= FOSecureContentConstants::Digit9;
+    }
+
+    /// <summary>
+    /// Whether a character code is a hexadecimal digit.
+    /// </summary>
+    /// <param name = "_code">The character code.</param>
+    /// <returns>true for 0-9, A-F or a-f.</returns>
+    public static boolean isHexDigit(int _code)
+    {
+        return FOSecureContentWindow::isDigit(_code)
+            || (_code >= FOSecureContentConstants::UpperA && _code <= FOSecureContentConstants::UpperF)
+            || (_code >= FOSecureContentConstants::LowerA && _code <= FOSecureContentConstants::LowerF);
+    }
+
+}

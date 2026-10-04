@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="FOSecure/FOSecure.rnrproj" Type="fc65038c-1b2f-41e1-a629-bed71d161fff" Id="0dcd0103-03b4-4212-9acc-c90ba367a535">
+    <BuildType Project="Debug" />
+  </Project>
+  <Properties Name="CRMSolutionProperties">
+    <Property Name="SolutionIsBoundToCRM" Value="True" />
+  </Properties>
+</Solution>

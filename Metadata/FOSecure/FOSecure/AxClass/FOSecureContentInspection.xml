@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>FOSecureContentInspection</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// What an inspector concluded: refined type, findings, and whether it could assess at all.
+/// </summary>
+public final class FOSecureContentInspection
+{
+    private str refinedExtensionValue;
+    private str refinedNameValue;
+    private FOSecureContentFindings findingsValue;
+    private boolean assessable;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>new</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Initializes an inconclusive inspection.
+    /// </summary>
+    private void new()
+    {
+        findingsValue = FOSecureContentFindings::empty();
+        assessable    = true;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>copyFrom</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Copies another inspection's state onto this one.
+    /// </summary>
+    /// <param name = "_source">The inspection to copy from.</param>
+    private void copyFrom(FOSecureContentInspection _source)
+    {
+        refinedExtensionValue = _source.refinedExtension();
+        refinedNameValue      = _source.refinedName();
+        findingsValue         = _source.findings();
+        assessable            = _source.isAssessable();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>setRefinedType</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Replaces the refined type.
+    /// </summary>
+    /// <param name = "_extension">The exact extension.</param>
+    /// <param name = "_name">The readable format name.</param>
+    private void setRefinedType(str _extension, str _name)
+    {
+        refinedExtensionValue = _extension;
+        refinedNameValue      = _name;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>setFindings</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Replaces the findings.
+    /// </summary>
+    /// <param name = "_findings">The findings to hold.</param>
+    private void setFindings(FOSecureContentFindings _findings)
+    {
+        findingsValue = _findings ? _findings : FOSecureContentFindings::empty();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>setAssessable</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Records whether the content could be assessed.
+    /// </summary>
+    /// <param name = "_assessable">false when inspection could not complete.</param>
+    private void setAssessable(boolean _assessable)
+    {
+        assessable = _assessable;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>inconclusive</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// An inspection that refined nothing and found nothing.
+    /// </summary>
+    /// <returns>An inconclusive inspection. Never null.</returns>
+    public static FOSecureContentInspection inconclusive()
+    {
+        return new FOSecureContentInspection();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>withRefinedType</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Copies this inspection with the format named exactly.
+    /// </summary>
+    /// <param name = "_extension">The exact extension.</param>
+    /// <param name = "_name">The readable format name.</param>
+    /// <returns>A new inspection.</returns>
+    public FOSecureContentInspection withRefinedType(str _extension, str _name)
+    {
+        FOSecureContentInspection copy = new FOSecureContentInspection();
+
+        copy.copyFrom(this);
+        copy.setRefinedType(_extension, _name);
+
+        return copy;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>withFinding</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Copies this inspection with one more finding.
+    /// </summary>
+    /// <param name = "_finding">The finding to add.</param>
+    /// <returns>A new inspection.</returns>
+    public FOSecureContentInspection withFinding(FOSecureContentFinding _finding)
+    {
+        FOSecureContentInspection copy = new FOSecureContentInspection();
+
+        copy.copyFrom(this);
+        copy.setFindings(findingsValue.with(_finding));
+
+        return copy;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>withFindings</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Copies this inspection with a whole set of findings.
+    /// </summary>
+    /// <param name = "_findings">The findings to hold.</param>
+    /// <returns>A new inspection.</returns>
+    public FOSecureContentInspection withFindings(FOSecureContentFindings _findings)
+    {
+        FOSecureContentInspection copy = new FOSecureContentInspection();
+
+        copy.copyFrom(this);
+        copy.setFindings(_findings);
+
+        return copy;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>withUnassessable</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Copies this inspection marked as one that could not be completed.
+    /// </summary>
+    /// <returns>A new inspection. Findings already collected are kept.</returns>
+    public FOSecureContentInspection withUnassessable()
+    {
+        FOSecureContentInspection copy = new FOSecureContentInspection();
+
+        copy.copyFrom(this);
+        copy.setAssessable(false);
+
+        return copy;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>refinedExtension</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// The exact extension, when the inspector could name one.
+    /// </summary>
+    /// <returns>A normalized extension, or an empty string.</returns>
+    public str refinedExtension()
+    {
+        return refinedExtensionValue;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>refinedName</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// The readable format name, when the inspector could name one.
+    /// </summary>
+    /// <returns>The name, or an empty string.</returns>
+    public str refinedName()
+    {
+        return refinedNameValue;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>isExact</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Whether the inspector positively named the format.
+    /// </summary>
+    /// <returns>true when the type is more than a shared container signature.</returns>
+    public boolean isExact()
+    {
+        return refinedExtensionValue != '';
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>findings</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// What was found inside.
+    /// </summary>
+    /// <returns>The findings. Never null.</returns>
+    public FOSecureContentFindings findings()
+    {
+        return findingsValue;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>isAssessable</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Whether inspection ran to completion.
+    /// </summary>
+    /// <returns>false when the absence of a finding proves nothing.</returns>
+    public boolean isAssessable()
+    {
+        return assessable;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

@@ -1,0 +1,7 @@
+{
+  "type": "FSCM",
+  "packageName": "FOSecure",
+  "buildVersion": "10.0.49",
+  "ciBranches": "main,release",
+  "deploymentScheduler": false
+}

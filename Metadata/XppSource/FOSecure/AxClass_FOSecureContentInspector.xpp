@@ -1,0 +1,26 @@
+﻿/// <summary>
+/// Refines what a file is and reports what it carries that can run.
+/// </summary>
+public abstract class FOSecureContentInspector
+{
+    /// <summary>
+    /// Inspects content already classified into this inspector's family.
+    /// </summary>
+    /// <param name = "_window">The content to inspect.</param>
+    /// <param name = "_claimedExtension">The extension the file claims, normalized.</param>
+    /// <returns>What was concluded. Never null, and never throws.</returns>
+    public abstract FOSecureContentInspection inspect(FOSecureContentWindow _window, str _claimedExtension)
+    {
+    }
+
+    /// <summary>
+    /// Whether there is anything to inspect.
+    /// </summary>
+    /// <param name = "_window">The window offered.</param>
+    /// <returns>false when the window is missing or empty.</returns>
+    protected boolean canInspect(FOSecureContentWindow _window)
+    {
+        return _window != null && !_window.isEmpty();
+    }
+
+}

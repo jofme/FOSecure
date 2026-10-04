@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>FOSecureContentConstants</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Cross-cutting constants for attachment content inspection.
+/// </summary>
+public final class FOSecureContentConstants
+{
+    /// <summary>ISO-8859-1. Maps all 256 byte values to distinct characters.</summary>
+    public const int Latin1CodePage = 28591;
+
+    /// <summary>UTF-16 little endian.</summary>
+    public const int Utf16LeCodePage = 1200;
+
+    /// <summary>UTF-16 big endian.</summary>
+    public const int Utf16BeCodePage = 1201;
+
+    /// <summary>Returned by every offset accessor when there is no answer.</summary>
+    public const int NotFound = -1;
+
+    /// <summary>Bytes the signature table compares against.</summary>
+    public const int HeaderBytes = 32;
+
+    /// <summary>Default bytes of an attachment to read.</summary>
+    public const int DefaultInspectBytes = 4194304;
+
+    /// <summary>Smallest accepted inspection window.</summary>
+    public const int MinInspectBytes = 65536;
+
+    /// <summary>Largest accepted inspection window.</summary>
+    public const int MaxInspectBytes = 16777216;
+
+    /// <summary>Bytes of the end of an attachment to read.</summary>
+    public const int TailBytes = 65536;
+
+    /// <summary>Bytes searched for a format header that need not sit at offset zero.</summary>
+    public const int HeaderSearchWindow = 1024;
+
+    /// <summary>Highest value a byte can hold.</summary>
+    public const int ByteMax = 255;
+
+    /// <summary>Values in one byte.</summary>
+    public const int ByteValues = 256;
+
+    // Character codes. Named so the classification helpers read as rules rather than arithmetic.
+    public const int Tab = 9;
+    public const int LineFeed = 10;
+    public const int FormFeed = 12;
+    public const int CarriageReturn = 13;
+    public const int Space = 32;
+    public const int NumberSign = 35;
+    public const int Percent = 37;
+    public const int Ampersand = 38;
+    public const int LeftParenthesis = 40;
+    public const int RightParenthesis = 41;
+    public const int Hyphen = 45;
+    public const int Dot = 46;
+    public const int Solidus = 47;
+    public const int Digit0 = 48;
+    public const int Digit9 = 57;
+    public const int Colon = 58;
+    public const int LessThan = 60;
+    public const int GreaterThan = 62;
+    public const int UpperA = 65;
+    public const int UpperF = 70;
+    public const int UpperZ = 90;
+    public const int LeftBracket = 91;
+    public const int RightBracket = 93;
+    public const int Underscore = 95;
+    public const int LowerA = 97;
+    public const int LowerF = 102;
+    public const int LowerZ = 122;
+    public const int LeftBrace = 123;
+    public const int RightBrace = 125;
+
+    /// <summary>Lowest printable ASCII code. Anything at or below is whitespace or control.</summary>
+    public const int PrintableMin = 32;
+
+    /// <summary>One past the highest printable ASCII code.</summary>
+    public const int PrintableMax = 127;
+
+    // Byte order marks.
+    public const int Utf16LeMarkFirst = 255;
+    public const int Utf16LeMarkSecond = 254;
+    public const int Utf16BeMarkFirst = 254;
+    public const int Utf16BeMarkSecond = 255;
+    public const int Utf8MarkFirst = 239;
+    public const int Utf8MarkSecond = 187;
+    public const int Utf8MarkThird = 191;
+
+
+    public const str PolyglotEvidence = literalStr("@FOSecure:FindingPolyglot");
+    public const str PdfJavaScriptEvidence = literalStr("@FOSecure:FindingPdfJavaScript");
+    public const str PdfOpenActionEvidence = literalStr("@FOSecure:FindingPdfOpenAction");
+    public const str PdfLaunchEvidence = literalStr("@FOSecure:FindingPdfLaunch");
+    public const str PdfRichMediaEvidence = literalStr("@FOSecure:FindingPdfRichMedia");
+    public const str PdfEmbeddedFileEvidence = literalStr("@FOSecure:FindingPdfEmbeddedFile");
+    public const str PdfXfaEvidence = literalStr("@FOSecure:FindingPdfXfa");
+    public const str PdfSubmitFormEvidence = literalStr("@FOSecure:FindingPdfSubmitForm");
+    public const str PdfRemoteGoToEvidence = literalStr("@FOSecure:FindingPdfRemoteGoTo");
+    public const str PdfImportDataEvidence = literalStr("@FOSecure:FindingPdfImportData");
+    public const str PdfEncryptedEvidence = literalStr("@FOSecure:FindingPdfEncrypted");
+    public const str PdfHeaderOffsetEvidence = literalStr("@FOSecure:FindingPdfHeaderOffset");
+    public const str PdfTrailerMissingEvidence = literalStr("@FOSecure:FindingPdfTrailerMissing");
+    public const str MarkupScriptEvidence = literalStr("@FOSecure:FindingMarkupScript");
+    public const str MarkupEventHandlerEvidence = literalStr("@FOSecure:FindingMarkupEventHandler");
+    public const str MarkupJavaScriptUrlEvidence = literalStr("@FOSecure:FindingMarkupJavaScriptUrl");
+    public const str MarkupFrameEvidence = literalStr("@FOSecure:FindingMarkupFrame");
+    public const str MarkupForeignObjectEvidence = literalStr("@FOSecure:FindingMarkupForeignObject");
+    public const str MarkupExternalUseEvidence = literalStr("@FOSecure:FindingMarkupExternalUse");
+    public const str MarkupExternalEntityEvidence = literalStr("@FOSecure:FindingMarkupExternalEntity");
+    public const str OfficeVbaProjectEvidence = literalStr("@FOSecure:FindingOfficeVbaProject");
+    public const str OfficeLegacyMacroEvidence = literalStr("@FOSecure:FindingOfficeLegacyMacro");
+    public const str OfficeEmbeddedOleEvidence = literalStr("@FOSecure:FindingOfficeEmbeddedOle");
+    public const str ZipPrependedDataEvidence = literalStr("@FOSecure:FindingZipPrependedData");
+
+    /// <summary>Prefix every evidence constant must still carry after compilation.</summary>
+    public const str LabelPrefix = '@FOSecure:';
+
+}
+]]></Declaration>
+		<Methods />
+	</SourceCode>
+</AxClass>

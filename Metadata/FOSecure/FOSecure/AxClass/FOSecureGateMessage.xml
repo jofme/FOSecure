@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>FOSecureGateMessage</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Reports attachment gate rejections without repeating the same message inside one interaction.
+/// </summary>
+public final class FOSecureGateMessage
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>reportOnce</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Raises a rejection message unless the same text is already on the current infolog.
+    /// </summary>
+    /// <param name = "_message">The message to report.</param>
+    /// <returns>true when the message was raised, false when it was already there.</returns>
+    public static boolean reportOnce(str _message)
+    {
+        if (!_message || FOSecureGateMessage::isOnInfolog(_message))
+        {
+            return false;
+        }
+
+        error(_message);
+
+        return true;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>isOnInfolog</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Whether a message has already been written to the current infolog.
+    /// </summary>
+    /// <param name = "_message">The message to look for.</param>
+    /// <returns>true when an identical line is already there.</returns>
+    private static boolean isOnInfolog(str _message)
+    {
+        SysInfologEnumerator enumerator = SysInfologEnumerator::newData(infolog.infologData());
+
+        while (enumerator.moveNext())
+        {
+            if (enumerator.currentMessage() == _message)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxTable xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>FOSecureAttachmentScan</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// The <c>FOSecureAttachmentScan</c> table.
+/// </summary>
+public class FOSecureAttachmentScan extends common
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>findByFileId</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Finds the malware scan row for a stored file.
+    /// </summary>
+    /// <param name = "_fileId">The DocuValue file identifier the row is keyed on.</param>
+    /// <param name = "_forUpdate">Whether to select the record for update.</param>
+    /// <returns>The scan row, or an empty buffer when the file has never been submitted.</returns>
+    public static FOSecureAttachmentScan findByFileId(guid _fileId, boolean _forUpdate = false)
+    {
+        FOSecureAttachmentScan attachmentScan;
+
+        if (_fileId == emptyGuid())
+        {
+            return attachmentScan;
+        }
+
+        attachmentScan.selectForUpdate(_forUpdate);
+
+        select firstonly attachmentScan
+            where attachmentScan.FileId == _fileId;
+
+        return attachmentScan;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>existsForFileId</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Determines whether a stored file has already been submitted for scanning.
+    /// </summary>
+    /// <param name = "_fileId">The DocuValue file identifier.</param>
+    /// <returns>true when a scan row exists for the file.</returns>
+    public static boolean existsForFileId(guid _fileId)
+    {
+        FOSecureAttachmentScan attachmentScan;
+
+        if (_fileId == emptyGuid())
+        {
+            return false;
+        }
+
+        select firstonly RecId from attachmentScan
+            where attachmentScan.FileId == _fileId;
+
+        return attachmentScan.RecId != 0;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>needsSubmission</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Whether this file still has to reach the quarantine container.
+    /// </summary>
+    /// <returns>true when nothing has been submitted for it yet.</returns>
+    /// <remarks>
+    /// A row whose content never reached the container records the attempt, not a verdict, so it
+    /// must not stand in the way of scanning the file the next time it is used.
+    /// </remarks>
+    public boolean needsSubmission()
+    {
+        if (!this.RecId)
+        {
+            return true;
+        }
+
+        if (this.BlobName)
+        {
+            return false;
+        }
+
+        switch (this.ScanState)
+        {
+            case FOSecureMalwareScanState::NotScanned:
+            case FOSecureMalwareScanState::Unavailable:
+                return true;
+        }
+
+        return false;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+	<DeveloperDocumentation>@FOSecure:AttachmentScanDeveloperDoc</DeveloperDocumentation>
+	<Label>@FOSecure:AttachmentScanTitle</Label>
+	<TableGroup>Transaction</TableGroup>
+	<TitleField1>FileName</TitleField1>
+	<TitleField2>ScanState</TitleField2>
+	<ClusteredIndex>FileIdIdx</ClusteredIndex>
+	<CreatedBy>Yes</CreatedBy>
+	<CreatedDateTime>Yes</CreatedDateTime>
+	<ModifiedBy>Yes</ModifiedBy>
+	<ModifiedDateTime>Yes</ModifiedDateTime>
+	<PrimaryIndex>FileIdIdx</PrimaryIndex>
+	<ReplacementKey>FileIdIdx</ReplacementKey>
+	<DeleteActions />
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>AutoReport</Name>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>FileId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>DocuRefRecId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>RefTableId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>RefRecId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FileName</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoLookup</Name>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>FileId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>DocuRefRecId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>RefTableId</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoIdentification</Name>
+			<AutoPopulate>Yes</AutoPopulate>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoSummary</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoBrowse</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>FOSecureIdentity</Name>
+			<Label>@FOSecure:ScanIdentityGroup</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>FileId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>DocuRefRecId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>RefTableId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>RefRecId</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FileName</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FileType</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>FOSecureScanResult</Name>
+			<Label>@FOSecure:ScanResultGroup</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>ScanState</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ScanDetail</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>SubmittedDateTime</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ResolvedDateTime</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>ContentLength</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>Sha256</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>BlobName</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>PollCount</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<Fields>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldGuid">
+			<Name>FileId</Name>
+			<AllowEdit>No</AllowEdit>
+			<ExtendedDataType>FileId</ExtendedDataType>
+			<Label>@FOSecure:AttachedFileId</Label>
+			<Mandatory>Yes</Mandatory>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt64">
+			<Name>DocuRefRecId</Name>
+			<ExtendedDataType>RefRecId</ExtendedDataType>
+			<Label>@FOSecure:AttachmentReference</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt">
+			<Name>RefTableId</Name>
+			<ExtendedDataType>RefTableId</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt64">
+			<Name>RefRecId</Name>
+			<ExtendedDataType>RefRecId</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>FileName</Name>
+			<ExtendedDataType>Filename</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>FileType</Name>
+			<ExtendedDataType>FilenameType</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt64">
+			<Name>ContentLength</Name>
+			<ExtendedDataType>FOSecureContentLength</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>Sha256</Name>
+			<ExtendedDataType>FOSecureFileHash</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>BlobName</Name>
+			<ExtendedDataType>FOSecureBlobName</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>ScanState</Name>
+			<Label>@FOSecure:MalwareScanState</Label>
+			<EnumType>FOSecureMalwareScanState</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldUtcDateTime">
+			<Name>SubmittedDateTime</Name>
+			<ExtendedDataType>TransDateTime</ExtendedDataType>
+			<Label>@FOSecure:ScanSubmittedOn</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldUtcDateTime">
+			<Name>ResolvedDateTime</Name>
+			<ExtendedDataType>TransDateTime</ExtendedDataType>
+			<Label>@FOSecure:ScanResolvedOn</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>ScanDetail</Name>
+			<ExtendedDataType>FOSecureScanDetail</ExtendedDataType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt">
+			<Name>PollCount</Name>
+			<ExtendedDataType>Counter</ExtendedDataType>
+			<Label>@FOSecure:ScanCheckCount</Label>
+		</AxTableField>
+	</Fields>
+	<FullTextIndexes />
+	<Indexes>
+		<AxTableIndex>
+			<Name>FileIdIdx</Name>
+			<AlternateKey>Yes</AlternateKey>
+			<Fields>
+				<AxTableIndexField>
+					<DataField>FileId</DataField>
+				</AxTableIndexField>
+			</Fields>
+		</AxTableIndex>
+		<AxTableIndex>
+			<Name>ScanStateIdx</Name>
+			<AllowDuplicates>Yes</AllowDuplicates>
+			<Fields>
+				<AxTableIndexField>
+					<DataField>ScanState</DataField>
+				</AxTableIndexField>
+				<AxTableIndexField>
+					<DataField>SubmittedDateTime</DataField>
+				</AxTableIndexField>
+			</Fields>
+		</AxTableIndex>
+	</Indexes>
+	<Mappings />
+	<Relations />
+	<StateMachines />
+</AxTable>

@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>FOSecureContentInspectorOle2</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Tells apart the legacy Office formats that share the compound file signature.
+/// </summary>
+public final class FOSecureContentInspectorOle2 extends FOSecureContentInspector
+{
+    private const int ByteOrderMarker = 65534;
+    private const int SectorShift512 = 9;
+    private const int SectorShift4096 = 12;
+    private const int MajorVersion3 = 3;
+    private const int MajorVersion4 = 4;
+
+    // Compound file header field offsets, MS-CFB.
+    private const int MajorVersionOffset = 26;
+    private const int ByteOrderOffset = 28;
+    private const int SectorShiftOffset = 30;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>isCompoundFile</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Whether the content really is a compound file.
+    /// </summary>
+    /// <param name = "_window">The content.</param>
+    /// <returns>true when the header is coherent.</returns>
+    public static boolean isCompoundFile(FOSecureContentWindow _window)
+    {
+        int shift     = _window.readUInt16Le(FOSecureContentInspectorOle2::SectorShiftOffset);
+        int byteOrder = _window.readUInt16Le(FOSecureContentInspectorOle2::ByteOrderOffset);
+        int major     = _window.readUInt16Le(FOSecureContentInspectorOle2::MajorVersionOffset);
+
+        return (shift == FOSecureContentInspectorOle2::SectorShift512
+            || shift == FOSecureContentInspectorOle2::SectorShift4096)
+            && byteOrder == FOSecureContentInspectorOle2::ByteOrderMarker
+            && (major == FOSecureContentInspectorOle2::MajorVersion3
+            || major == FOSecureContentInspectorOle2::MajorVersion4);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>hasStreamName</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Whether a stream of this name appears in the file.
+    /// </summary>
+    /// <param name = "_window">The content.</param>
+    /// <param name = "_name">The stream name, written normally.</param>
+    /// <returns>true when the name is present as UTF-16LE text.</returns>
+    public static boolean hasStreamName(FOSecureContentWindow _window, str _name)
+    {
+        str   widened   = FOSecureContentWindow::widenToUtf16Le(_name);
+        int64 tailStart = _window.tailStart();
+        int64 length    = _window.length();
+
+        if (FOSecureContentWindow::indexOfOrdinal(
+            _window.textAt(0, _window.headLength()), widened, 0, true) >= 0)
+        {
+            return true;
+        }
+
+        if (tailStart < length)
+        {
+            return FOSecureContentWindow::indexOfOrdinal(
+                _window.textAt(tailStart, any2Int(length - tailStart)), widened, 0, true) >= 0;
+        }
+
+        return false;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>typeFromStreams</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Names the format from the streams it is required to contain.
+    /// </summary>
+    /// <param name = "_window">The content.</param>
+    /// <returns>Exact extension and readable name, both empty when unknown.</returns>
+    public static container typeFromStreams(FOSecureContentWindow _window)
+    {
+        if (FOSecureContentInspectorOle2::hasStreamName(_window, 'WordDocument'))
+        {
+            return ['doc', 'Word 97-2003 document'];
+        }
+
+        if (FOSecureContentInspectorOle2::hasStreamName(_window, 'Workbook'))
+        {
+            return ['xls', 'Excel 97-2003 workbook'];
+        }
+
+        if (FOSecureContentInspectorOle2::hasStreamName(_window, 'PowerPoint Document'))
+        {
+            return ['ppt', 'PowerPoint 97-2003 presentation'];
+        }
+
+        if (FOSecureContentInspectorOle2::hasStreamName(_window, 'VisioDocument'))
+        {
+            return ['vsd', 'Visio document'];
+        }
+
+        if (FOSecureContentInspectorOle2::hasStreamName(_window, '__substg1.0_'))
+        {
+            return ['msg', 'Outlook message'];
+        }
+
+        return ['', ''];
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>inspect</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Identifies a compound file and reports what it carries.
+    /// </summary>
+    /// <param name = "_window">The content to inspect.</param>
+    /// <param name = "_claimedExtension">The extension the file claims, normalized.</param>
+    /// <returns>What was concluded. Never null, and never throws.</returns>
+    public FOSecureContentInspection inspect(FOSecureContentWindow _window, str _claimedExtension)
+    {
+        FOSecureContentInspection result   = FOSecureContentInspection::inconclusive();
+        FOSecureContentFindings   findings = FOSecureContentFindings::empty();
+        container identified;
+        str       refinedExtension;
+        str       refinedName;
+
+        if (!this.canInspect(_window))
+        {
+            return result;
+        }
+
+        try
+        {
+            if (!FOSecureContentInspectorOle2::isCompoundFile(_window))
+            {
+                return result;
+            }
+
+            if (FOSecureContentInspectorOle2::hasStreamName(_window, '_VBA_PROJECT')
+                || FOSecureContentInspectorOle2::hasStreamName(_window, '_VBA_PROJECT_CUR'))
+            {
+                findings = findings.with(FOSecureContentFinding::construct(
+                    FOSecureActiveContentKind::Macro,
+                    FOSecureContentConstants::OfficeLegacyMacroEvidence));
+            }
+
+            if (FOSecureContentInspectorOle2::hasStreamName(_window, 'Ole10Native'))
+            {
+                findings = findings.with(FOSecureContentFinding::construct(
+                    FOSecureActiveContentKind::EmbeddedFile,
+                    FOSecureContentConstants::OfficeEmbeddedOleEvidence));
+            }
+
+            identified       = FOSecureContentInspectorOle2::typeFromStreams(_window);
+            refinedExtension = conPeek(identified, 1);
+            refinedName      = conPeek(identified, 2);
+
+            if (refinedExtension)
+            {
+                result = result.withRefinedType(refinedExtension, refinedName);
+            }
+
+            result = result.withFindings(findings);
+
+            if (!refinedExtension && _window.isTruncated())
+            {
+                result = result.withUnassessable();
+            }
+        }
+        catch (Exception::CLRError)
+        {
+            exceptionTextFallThrough();
+        }
+        catch (Exception::Error)
+        {
+            exceptionTextFallThrough();
+        }
+
+        return result;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

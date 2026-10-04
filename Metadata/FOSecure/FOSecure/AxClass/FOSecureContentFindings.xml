@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>FOSecureContentFindings</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// An immutable, ordered set of findings, capped at MaxFindings.
+/// </summary>
+public final class FOSecureContentFindings
+{
+    public const int MaxFindings = 32;
+    private const str Separator = ', ';
+    private const str StoredSeparator = ',';
+    private List items;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>new</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Initializes an empty set.
+    /// </summary>
+    private void new()
+    {
+        items = new List(Types::Class);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>empty</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// An empty set.
+    /// </summary>
+    /// <returns>A set with nothing in it. Never null.</returns>
+    public static FOSecureContentFindings empty()
+    {
+        return new FOSecureContentFindings();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>adopt</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Takes ownership of a list of findings.
+    /// </summary>
+    /// <param name = "_items">The findings this set is to hold.</param>
+    /// <remarks>
+    /// A method because X++ cannot parse a call chained onto a field reached through another
+    /// instance. Only with() calls it, on a set it has just created.
+    /// </remarks>
+    private void adopt(List _items)
+    {
+        items = _items;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>with</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Copies this set with one more finding in it.
+    /// </summary>
+    /// <param name = "_finding">The finding to add. Null is ignored.</param>
+    /// <returns>A new set; this one is left alone.</returns>
+    public FOSecureContentFindings with(FOSecureContentFinding _finding)
+    {
+        FOSecureContentFindings copy       = FOSecureContentFindings::empty();
+        List                    merged     = new List(Types::Class);
+        ListEnumerator          enumerator = items.getEnumerator();
+
+        while (enumerator.moveNext())
+        {
+            merged.addEnd(enumerator.current());
+        }
+
+        if (_finding && merged.elements() < FOSecureContentFindings::MaxFindings)
+        {
+            merged.addEnd(_finding);
+        }
+
+        copy.adopt(merged);
+
+        return copy;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>hasFindings</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Whether anything was found.
+    /// </summary>
+    /// <returns>true when the set is not empty.</returns>
+    public boolean hasFindings()
+    {
+        return items.elements() > 0;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>elements</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// How many findings the set holds.
+    /// </summary>
+    /// <returns>The count.</returns>
+    public int elements()
+    {
+        return items.elements();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>getEnumerator</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Walks the findings in the order they were added.
+    /// </summary>
+    /// <returns>An enumerator over FOSecureContentFinding.</returns>
+    public ListEnumerator getEnumerator()
+    {
+        return items.getEnumerator();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>contains</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Whether a finding carrying this evidence is already recorded.
+    /// </summary>
+    /// <param name = "_evidenceLabelId">The evidence label to look for.</param>
+    /// <returns>true when the set already carries it.</returns>
+    /// <remarks>
+    /// The same evidence is reachable twice: once in a PDF's raw bytes and again inside an
+    /// inflated object stream.
+    /// </remarks>
+    public boolean contains(str _evidenceLabelId)
+    {
+        ListEnumerator         enumerator = items.getEnumerator();
+        FOSecureContentFinding finding;
+
+        if (!_evidenceLabelId)
+        {
+            return false;
+        }
+
+        while (enumerator.moveNext())
+        {
+            finding = enumerator.current();
+
+            if (strCmp(finding.evidenceLabelId(), _evidenceLabelId) == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>labelIds</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// The evidence label ids, for persisting on the inspection row.
+    /// </summary>
+    /// <returns>A comma separated list of unresolved label ids.</returns>
+    public str labelIds()
+    {
+        ListEnumerator         enumerator = items.getEnumerator();
+        FOSecureContentFinding finding;
+        str                    result;
+
+        while (enumerator.moveNext())
+        {
+            finding = enumerator.current();
+
+            if (finding.evidenceLabelId())
+            {
+                result += (result ? FOSecureContentFindings::StoredSeparator : '') + finding.evidenceLabelId();
+            }
+        }
+
+        return result;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>describe</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// The evidence as text in the user's language, for the rejection message.
+    /// </summary>
+    /// <returns>A readable list, or an empty string.</returns>
+    public str describe()
+    {
+        ListEnumerator         enumerator = items.getEnumerator();
+        FOSecureContentFinding finding;
+        str                    result;
+        str                    text;
+
+        while (enumerator.moveNext())
+        {
+            finding = enumerator.current();
+            text    = finding.describe();
+
+            if (text)
+            {
+                result += (result ? FOSecureContentFindings::Separator : '') + text;
+            }
+        }
+
+        return result;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

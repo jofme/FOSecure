@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>FOSecureActiveContentPolicy</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Rates findings against the extension a file claims.
+/// </summary>
+public final class FOSecureActiveContentPolicy
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>macroForbiddingExtensions</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Extensions whose format does not permit macros.
+    /// </summary>
+    /// <returns>Normalized extensions.</returns>
+    private static container macroForbiddingExtensions()
+    {
+        return ['docx', 'xlsx', 'pptx', 'dotx', 'xltx', 'potx'];
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>scriptBearingMarkupExtensions</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Extensions whose purpose is to carry markup, and therefore script.
+    /// </summary>
+    /// <returns>Normalized extensions.</returns>
+    private static container scriptBearingMarkupExtensions()
+    {
+        return ['html', 'htm', 'xhtml', 'mht', 'mhtml'];
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>isIn</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Whether a normalized extension is in a set.
+    /// </summary>
+    /// <param name = "_extension">The extension to look for.</param>
+    /// <param name = "_set">The set to look in.</param>
+    /// <returns>true when it is a member.</returns>
+    private static boolean isIn(str _extension, container _set)
+    {
+        int i;
+
+        for (i = 1; i <= conLen(_set); i++)
+        {
+            if (_extension == conPeek(_set, i))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>severityOf</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Rates a single finding.
+    /// </summary>
+    /// <param name = "_kind">What was found.</param>
+    /// <param name = "_claimedExtension">The extension the file claims.</param>
+    /// <returns>How seriously to take it. Only Blocking is rejected on.</returns>
+    public static FOSecureActiveContentSeverity severityOf(
+        FOSecureActiveContentKind _kind,
+        str                       _claimedExtension)
+    {
+        str claimed = FOSecureContentCheck::normalize(_claimedExtension);
+
+        switch (_kind)
+        {
+            // Valid as two formats at once, or embedded media and application launches. Neither
+            // has a legitimate reason to be in a business attachment.
+            case FOSecureActiveContentKind::Polyglot:
+            case FOSecureActiveContentKind::DynamicMedia:
+                return FOSecureActiveContentSeverity::Blocking;
+
+            case FOSecureActiveContentKind::Script:
+                // HTML is supposed to contain script; the extension restriction list is the right
+                // control for those. SVG is not: it is served inline, so script in one runs.
+                if (FOSecureActiveContentPolicy::isIn(claimed, FOSecureActiveContentPolicy::scriptBearingMarkupExtensions()))
+                {
+                    return FOSecureActiveContentSeverity::Suspicious;
+                }
+
+                return FOSecureActiveContentSeverity::Blocking;
+
+            case FOSecureActiveContentKind::Macro:
+                // A macro in a container whose format forbids one is the attack. In a .xlsm it is
+                // just a macro workbook.
+                if (FOSecureActiveContentPolicy::isIn(claimed, FOSecureActiveContentPolicy::macroForbiddingExtensions()))
+                {
+                    return FOSecureActiveContentSeverity::Blocking;
+                }
+
+                return FOSecureActiveContentSeverity::Suspicious;
+
+            // Worth seeing, never blocking alone: an /OpenAction is usually a page fit, and the
+            // script it may point at is itself a Script finding.
+            case FOSecureActiveContentKind::AutoAction:
+            case FOSecureActiveContentKind::ExternalReference:
+            case FOSecureActiveContentKind::ExternalEntity:
+                return FOSecureActiveContentSeverity::Suspicious;
+
+            // The e-invoice carve out: a PDF/A-3 invoice embeds XML, a tax form is an interactive
+            // form. Ordinary business documents.
+            case FOSecureActiveContentKind::EmbeddedFile:
+            case FOSecureActiveContentKind::InteractiveForm:
+                return FOSecureActiveContentSeverity::Informational;
+        }
+
+        return FOSecureActiveContentSeverity::None;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>highestSeverity</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Rates a set of findings by its most serious member.
+    /// </summary>
+    /// <param name = "_findings">The findings to rate.</param>
+    /// <param name = "_claimedExtension">The extension the file claims.</param>
+    /// <returns>The highest severity present, or None.</returns>
+    public static FOSecureActiveContentSeverity highestSeverity(
+        FOSecureContentFindings _findings,
+        str                     _claimedExtension)
+    {
+        FOSecureActiveContentSeverity highest = FOSecureActiveContentSeverity::None;
+        FOSecureActiveContentSeverity current;
+        ListEnumerator                enumerator;
+        FOSecureContentFinding        finding;
+
+        if (!_findings || !_findings.hasFindings())
+        {
+            return highest;
+        }
+
+        enumerator = _findings.getEnumerator();
+
+        while (enumerator.moveNext())
+        {
+            finding = enumerator.current();
+            current = FOSecureActiveContentPolicy::severityOf(finding.kind(), _claimedExtension);
+
+            if (current > highest)
+            {
+                highest = current;
+            }
+        }
+
+        return highest;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>blocks</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Whether a severity is one an attachment may be rejected for.
+    /// </summary>
+    /// <param name = "_severity">The severity to test.</param>
+    /// <returns>true only for Blocking.</returns>
+    public static boolean blocks(FOSecureActiveContentSeverity _severity)
+    {
+        return _severity == FOSecureActiveContentSeverity::Blocking;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

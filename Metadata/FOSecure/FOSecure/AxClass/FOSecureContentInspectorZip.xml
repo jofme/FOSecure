@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>FOSecureContentInspectorZip</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// Tells apart the formats that all begin with a ZIP local file header.
+/// </summary>
+/// <remarks>
+/// Identified from the central directory, not a local header walk. Refines to the BASE type
+/// (docx, never docm). Field offsets below are from PKWARE APPNOTE.
+/// </remarks>
+public final class FOSecureContentInspectorZip extends FOSecureContentInspector
+{
+    private const int LocalFileHeaderSignature = 67324752;
+    private const int CentralDirectorySignature = 33639248;
+    private const int LocalMethodOffset = 8;
+    private const int LocalUncompressedSizeOffset = 22;
+    private const int LocalNameLengthOffset = 26;
+    private const int LocalExtraLengthOffset = 28;
+    private const int LocalNameOffset = 30;
+    private const int CentralNameLengthOffset = 28;
+    private const int CentralExtraLengthOffset = 30;
+    private const int CentralCommentLengthOffset = 32;
+    private const int CentralFixedSize = 46;
+    private const int EocdDirectorySizeOffset = 12;
+    private const int EocdDirectoryStartOffset = 16;
+    private const int EocdCommentLengthOffset = 20;
+    private const int EocdFixedSize = 22;
+    private const int MaxCommentBytes = 65535;
+    private const int MaxEntries = 10000;
+    private const int MaxNameBytes = 1024;
+    private const int MaxMimetypeBytes = 128;
+    private const int StoredMethod = 0;
+    private const int MimetypeNameLength = 8;
+    private const int64 Zip64Sentinel = 4294967295;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>hasName</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Whether a named entry is present.
+    /// </summary>
+    /// <param name = "_names">The entry names.</param>
+    /// <param name = "_wanted">The exact name to look for.</param>
+    /// <returns>true when present.</returns>
+    private static boolean hasName(container _names, str _wanted)
+    {
+        int i;
+
+        for (i = 1; i <= conLen(_names); i++)
+        {
+            if (strCmp(conPeek(_names, i), _wanted) == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>hasEntryEndingWith</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Whether any entry name ends with a suffix.
+    /// </summary>
+    /// <param name = "_names">The entry names.</param>
+    /// <param name = "_suffix">The suffix to look for.</param>
+    /// <returns>true when an entry ends with it.</returns>
+    /// <remarks>
+    /// A repackaged file can put the macro project anywhere, so only the leaf is matched.
+    /// </remarks>
+    private static boolean hasEntryEndingWith(container _names, str _suffix)
+    {
+        str name;
+        int i;
+        int at;
+
+        for (i = 1; i <= conLen(_names); i++)
+        {
+            name = conPeek(_names, i);
+            at   = FOSecureContentWindow::indexOfOrdinal(name, _suffix);
+
+            if (at >= 0 && at + strLen(_suffix) == strLen(name))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>odfTypeFromMimetype</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Identifies an Open Document or EPUB package from its first entry.
+    /// </summary>
+    /// <param name = "_window">The content.</param>
+    /// <returns>The exact extension, or an empty string.</returns>
+    public static str odfTypeFromMimetype(FOSecureContentWindow _window)
+    {
+        int   method;
+        int   nameLength;
+        int   extraLength;
+        int64 uncompressed;
+        str   mime;
+
+        if (_window.readUInt32Le(0) != FOSecureContentInspectorZip::LocalFileHeaderSignature)
+        {
+            return '';
+        }
+
+        method      = _window.readUInt16Le(FOSecureContentInspectorZip::LocalMethodOffset);
+        nameLength  = _window.readUInt16Le(FOSecureContentInspectorZip::LocalNameLengthOffset);
+        extraLength = _window.readUInt16Le(FOSecureContentInspectorZip::LocalExtraLengthOffset);
+
+        if (method != FOSecureContentInspectorZip::StoredMethod
+            || nameLength != FOSecureContentInspectorZip::MimetypeNameLength
+            || strCmp(_window.textAt(FOSecureContentInspectorZip::LocalNameOffset, nameLength), 'mimetype') != 0)
+        {
+            return '';
+        }
+
+        uncompressed = _window.readUInt32Le(FOSecureContentInspectorZip::LocalUncompressedSizeOffset);
+
+        if (uncompressed <= 0 || uncompressed > FOSecureContentInspectorZip::MaxMimetypeBytes)
+        {
+            return '';
+        }
+
+        mime = _window.textAt(
+            FOSecureContentInspectorZip::LocalNameOffset + nameLength + extraLength,
+            any2Int(uncompressed));
+
+        if (FOSecureContentWindow::indexOfOrdinal(mime, 'application/epub+zip') == 0)
+        {
+            return 'epub';
+        }
+
+        if (FOSecureContentWindow::indexOfOrdinal(mime, 'opendocument.text') >= 0)
+        {
+            return 'odt';
+        }
+
+        if (FOSecureContentWindow::indexOfOrdinal(mime, 'opendocument.spreadsheet') >= 0)
+        {
+            return 'ods';
+        }
+
+        if (FOSecureContentWindow::indexOfOrdinal(mime, 'opendocument.presentation') >= 0)
+        {
+            return 'odp';
+        }
+
+        if (FOSecureContentWindow::indexOfOrdinal(mime, 'opendocument.graphics') >= 0)
+        {
+            return 'odg';
+        }
+
+        return '';
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>eocdOffset</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Finds the end of central directory record.
+    /// </summary>
+    /// <param name = "_window">The content.</param>
+    /// <returns>Its absolute offset, or -1.</returns>
+    public static int64 eocdOffset(FOSecureContentWindow _window)
+    {
+        str       signature = 'PK' + num2Char(5) + num2Char(6);
+        int64     length    = _window.length();
+        int64     tailStart = _window.tailStart();
+        int64     windowStart;
+        int64     absolute;
+        str       tailText;
+        container candidates;
+        int       at;
+        int       i;
+        int       commentLength;
+
+        windowStart = tailStart < length ? tailStart : 0;
+
+        if (length - windowStart > FOSecureContentInspectorZip::MaxCommentBytes
+            + FOSecureContentInspectorZip::EocdFixedSize)
+        {
+            windowStart = length - FOSecureContentInspectorZip::MaxCommentBytes
+                - FOSecureContentInspectorZip::EocdFixedSize;
+        }
+
+        tailText = _window.textAt(windowStart, any2Int(length - windowStart));
+
+        if (!tailText)
+        {
+            return FOSecureContentConstants::NotFound;
+        }
+
+        at = FOSecureContentWindow::indexOfOrdinal(tailText, signature, 0, true);
+
+        while (at >= 0)
+        {
+            candidates += [at];
+            at = FOSecureContentWindow::indexOfOrdinal(tailText, signature, at + 1, true);
+        }
+
+        for (i = conLen(candidates); i >= 1; i--)
+        {
+            at            = conPeek(candidates, i);
+            absolute      = windowStart + at;
+            commentLength = _window.readUInt16Le(
+                absolute + FOSecureContentInspectorZip::EocdCommentLengthOffset);
+
+            if (commentLength >= 0
+                && absolute + FOSecureContentInspectorZip::EocdFixedSize + commentLength == length)
+            {
+                return absolute;
+            }
+        }
+
+        return FOSecureContentConstants::NotFound;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>prependedDelta</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// How many bytes sit in front of the archive that are not part of it.
+    /// </summary>
+    /// <param name = "_window">The content.</param>
+    /// <param name = "_eocdOffset">The validated end of central directory offset.</param>
+    /// <returns>The number of prepended bytes, or 0.</returns>
+    public static int64 prependedDelta(FOSecureContentWindow _window, int64 _eocdOffset)
+    {
+        int64 directorySize = _window.readUInt32Le(
+            _eocdOffset + FOSecureContentInspectorZip::EocdDirectorySizeOffset);
+        int64 recordedStart = _window.readUInt32Le(
+            _eocdOffset + FOSecureContentInspectorZip::EocdDirectoryStartOffset);
+
+        if (directorySize < 0 || recordedStart < 0
+            || recordedStart == FOSecureContentInspectorZip::Zip64Sentinel)
+        {
+            return 0;
+        }
+
+        return (_eocdOffset - directorySize) - recordedStart;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>centralDirectoryNames</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Reads the entry names from the central directory.
+    /// </summary>
+    /// <param name = "_window">The content.</param>
+    /// <param name = "_eocdOffset">The validated end of central directory offset.</param>
+    /// <returns>The names, in directory order.</returns>
+    public static container centralDirectoryNames(FOSecureContentWindow _window, int64 _eocdOffset)
+    {
+        container names;
+        int64     directorySize = _window.readUInt32Le(
+            _eocdOffset + FOSecureContentInspectorZip::EocdDirectorySizeOffset);
+        int64     position;
+        int       nameLength;
+        int       extraLength;
+        int       commentLength;
+        int       entries;
+        str       name;
+
+        if (directorySize <= 0 || directorySize == FOSecureContentInspectorZip::Zip64Sentinel)
+        {
+            return names;
+        }
+
+        position = _eocdOffset - directorySize;
+
+        while (entries < FOSecureContentInspectorZip::MaxEntries)
+        {
+            if (_window.readUInt32Le(position) != FOSecureContentInspectorZip::CentralDirectorySignature)
+            {
+                break;
+            }
+
+            nameLength    = _window.readUInt16Le(
+                position + FOSecureContentInspectorZip::CentralNameLengthOffset);
+            extraLength   = _window.readUInt16Le(
+                position + FOSecureContentInspectorZip::CentralExtraLengthOffset);
+            commentLength = _window.readUInt16Le(
+                position + FOSecureContentInspectorZip::CentralCommentLengthOffset);
+
+            if (nameLength <= 0 || nameLength > FOSecureContentInspectorZip::MaxNameBytes
+                || extraLength < 0 || commentLength < 0)
+            {
+                break;
+            }
+
+            name = _window.textAt(
+                position + FOSecureContentInspectorZip::CentralFixedSize, nameLength);
+
+            if (!name)
+            {
+                break;
+            }
+
+            names    += [name];
+            position += FOSecureContentInspectorZip::CentralFixedSize
+                + nameLength + extraLength + commentLength;
+            entries++;
+        }
+
+        return names;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>typeFromNames</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Names the format from the entries it carries.
+    /// </summary>
+    /// <param name = "_names">The entry names.</param>
+    /// <returns>Exact extension and readable name, both empty when unknown.</returns>
+    public static container typeFromNames(container _names)
+    {
+        if (FOSecureContentInspectorZip::hasName(_names, 'word/document.xml')
+            || FOSecureContentInspectorZip::hasName(_names, 'word/document2.xml'))
+        {
+            return ['docx', 'Office Open XML document'];
+        }
+
+        if (FOSecureContentInspectorZip::hasName(_names, 'xl/workbook.xml'))
+        {
+            return ['xlsx', 'Office Open XML workbook'];
+        }
+
+        if (FOSecureContentInspectorZip::hasName(_names, 'xl/workbook.bin'))
+        {
+            return ['xlsb', 'Office Open XML binary workbook'];
+        }
+
+        if (FOSecureContentInspectorZip::hasName(_names, 'ppt/presentation.xml'))
+        {
+            return ['pptx', 'Office Open XML presentation'];
+        }
+
+        // Both, because an Android package carries a Java manifest too.
+        if (FOSecureContentInspectorZip::hasName(_names, 'classes.dex')
+            && FOSecureContentInspectorZip::hasName(_names, 'AndroidManifest.xml'))
+        {
+            return ['apk', 'Android package'];
+        }
+
+        if (FOSecureContentInspectorZip::hasName(_names, 'META-INF/MANIFEST.MF'))
+        {
+            return ['jar', 'Java archive'];
+        }
+
+        return ['', ''];
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>inspect</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Identifies a ZIP based package and reports what it carries.
+    /// </summary>
+    /// <param name = "_window">The content to inspect.</param>
+    /// <param name = "_claimedExtension">The extension the file claims, normalized.</param>
+    /// <returns>What was concluded. Never null, and never throws.</returns>
+    public FOSecureContentInspection inspect(FOSecureContentWindow _window, str _claimedExtension)
+    {
+        FOSecureContentInspection result   = FOSecureContentInspection::inconclusive();
+        FOSecureContentFindings   findings = FOSecureContentFindings::empty();
+        container names;
+        container identified;
+        str       refinedExtension;
+        str       refinedName;
+        int64     eocd;
+        int64     delta;
+
+        if (!this.canInspect(_window))
+        {
+            return result;
+        }
+
+        try
+        {
+            // Cheap and conclusive when it answers.
+            refinedExtension = FOSecureContentInspectorZip::odfTypeFromMimetype(_window);
+
+            if (refinedExtension)
+            {
+                refinedName = 'Open Document Format package';
+            }
+
+            eocd = FOSecureContentInspectorZip::eocdOffset(_window);
+
+            if (eocd != FOSecureContentConstants::NotFound)
+            {
+                delta = FOSecureContentInspectorZip::prependedDelta(_window, eocd);
+
+                if (delta > 0)
+                {
+                    findings = findings.with(FOSecureContentFinding::construct(
+                        FOSecureActiveContentKind::Polyglot,
+                        FOSecureContentConstants::ZipPrependedDataEvidence,
+                        delta));
+                }
+
+                names = FOSecureContentInspectorZip::centralDirectoryNames(_window, eocd);
+            }
+
+            if (conLen(names))
+            {
+                if (FOSecureContentInspectorZip::hasEntryEndingWith(names, 'vbaProject.bin'))
+                {
+                    findings = findings.with(FOSecureContentFinding::construct(
+                        FOSecureActiveContentKind::Macro,
+                        FOSecureContentConstants::OfficeVbaProjectEvidence));
+                }
+
+                if (FOSecureContentInspectorZip::hasEntryEndingWith(names, 'oleObject1.bin'))
+                {
+                    findings = findings.with(FOSecureContentFinding::construct(
+                        FOSecureActiveContentKind::EmbeddedFile,
+                        FOSecureContentConstants::OfficeEmbeddedOleEvidence));
+                }
+
+                if (!refinedExtension)
+                {
+                    identified       = FOSecureContentInspectorZip::typeFromNames(names);
+                    refinedExtension = conPeek(identified, 1);
+                    refinedName      = conPeek(identified, 2);
+                }
+            }
+
+            if (refinedExtension)
+            {
+                result = result.withRefinedType(refinedExtension, refinedName);
+            }
+
+            result = result.withFindings(findings);
+
+            // No directory reached means the names were never seen.
+            if (!conLen(names) && _window.isTruncated())
+            {
+                result = result.withUnassessable();
+            }
+        }
+        catch (Exception::CLRError)
+        {
+            exceptionTextFallThrough();
+        }
+        catch (Exception::Error)
+        {
+            exceptionTextFallThrough();
+        }
+
+        return result;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

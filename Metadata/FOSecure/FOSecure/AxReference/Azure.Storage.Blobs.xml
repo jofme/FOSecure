@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxReference xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>Azure.Storage.Blobs</Name>
+	<AssemblyName>Azure.Storage.Blobs</AssemblyName>
+	<AssemblyDisplayName>Azure.Storage.Blobs, Version=12.23.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8</AssemblyDisplayName>
+	<PublicKeyToken>92742159e12e44c8</PublicKeyToken>
+	<Version>12.23.0.0</Version>
+</AxReference>

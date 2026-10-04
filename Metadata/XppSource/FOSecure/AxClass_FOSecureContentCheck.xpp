@@ -1,0 +1,491 @@
+﻿/// <summary>
+/// Identifies what a file actually is from the bytes it starts with, and whether that agrees with
+/// the extension it claims.
+/// </summary>
+/// <remarks>
+/// To support a new format, add a row to signatures(); if it shares a header with a format already
+/// there, add it to the matching family in families() too.
+/// </remarks>
+public final class FOSecureContentCheck
+{
+    private const int SigPrefix = 1;
+    private const int SigOffset = 2;
+    private const int SigExtension = 3;
+    private const int SigMimeType = 4;
+    private const int SigName = 5;
+
+    /// <summary>
+    /// Determines whether the content of a stream is consistent with the extension the file claims.
+    /// </summary>
+    /// <param name = "_stream">The content to inspect. Must be readable and seekable.</param>
+    /// <param name = "_expectedExtension">The extension taken from the file name, in any spelling.</param>
+    /// <returns>Mismatch is the only outcome a caller should reject on.</returns>
+    public static FOSecureContentCheckResult validateExtension(System.IO.Stream _stream, FilenameType _expectedExtension)
+    {
+        str                        expected  = FOSecureContentCheck::normalize(_expectedExtension);
+        FOSecureContentCheckResult inspected = FOSecureContentCheck::detectFormat(_stream, expected);
+        boolean                    acceptable;
+
+        if (inspected.outcome() != FOSecureContentCheckOutcome::Identified)
+        {
+            return inspected;
+        }
+
+        if (!expected)
+        {
+            return inspected;
+        }
+
+        acceptable = FOSecureContentCheck::isAcceptable(expected, inspected.detectedExtension());
+
+        return inspected.withOutcome(
+            acceptable ? FOSecureContentCheckOutcome::Match : FOSecureContentCheckOutcome::Mismatch,
+            expected);
+    }
+
+    /// <summary>
+    /// Normalizes a file name extension to bare lowercase with no leading dot.
+    /// </summary>
+    /// <param name = "_extension">An extension in any spelling, for example ".PDF" or " .Pdf ".</param>
+    /// <returns>The normalized extension, or an empty string.</returns>
+    public static str normalize(str _extension)
+    {
+        str normalized = strLwr(strLRTrim(_extension));
+
+        while (subStr(normalized, 1, 1) == '.')
+        {
+            normalized = subStr(normalized, 2, strLen(normalized) - 1);
+        }
+
+        return normalized;
+    }
+
+    /// <summary>
+    /// Whether content detected as one extension is acceptable for a file claiming another.
+    /// </summary>
+    /// <param name = "_expected">The extension taken from the file name.</param>
+    /// <param name = "_detected">The extension reported by detection.</param>
+    /// <param name = "_detectionIsExact">Whether an inspector positively named the format.</param>
+    /// <returns>false only when both are known and definitely disagree.</returns>
+    public static boolean isAcceptable(str _expected, str _detected, boolean _detectionIsExact = false)
+    {
+        str expectedExtension = FOSecureContentCheck::normalize(_expected);
+        str detectedExtension = FOSecureContentCheck::normalize(_detected);
+
+        // Fail open: without both halves there is no evidence of a mismatch.
+        if (!expectedExtension || !detectedExtension)
+        {
+            return true;
+        }
+
+        if (expectedExtension == detectedExtension)
+        {
+            return true;
+        }
+
+        if (!_detectionIsExact)
+        {
+            return FOSecureContentCheck::sameFamily(
+                expectedExtension, detectedExtension, FOSecureContentCheck::containerFamilies());
+        }
+
+        return FOSecureContentCheck::sameFamily(
+            expectedExtension, detectedExtension, FOSecureContentCheck::families());
+    }
+
+    /// <summary>
+    /// The signature table, ordered longest prefix first.
+    /// </summary>
+    /// <returns>Rows of [hex prefix, byte offset, extension, MIME type, readable name].</returns>
+    private static container signatures()
+    {
+        // Keep the longest-prefix-first order so a specific signature wins over a shorter one it
+        // starts with. The MIME column is reference data; nothing reads it yet.
+        
+        return [
+            ['D0CF11E0A1B11AE1', 0, 'doc',   'application/x-ole-storage', 'OLE2 compound document'],
+            ['89504E470D0A1A0A', 0, 'png',   'image/png',                 'PNG image'],
+            ['3C21444F43545950', 0, 'html',  'text/html',                 'HTML document'],
+            ['526172211A07',     0, 'rar',   'application/vnd.rar',       'RAR archive'],
+            ['377ABCAF271C',     0, '7z',    'application/x-7z-compressed', '7-Zip archive'],
+            ['3C3F786D6C',       0, 'xml',   'application/xml',           'XML document'],
+            ['7B5C727466',       0, 'rtf',   'application/rtf',           'Rich Text Format document'],
+            ['3C68746D6C',       0, 'html',  'text/html',                 'HTML document'],
+
+            // "<svg". Without this row an SVG that omits the XML declaration matches nothing at
+            // all and is accepted as unrecognized — and an SVG is rendered inline, so script
+            // inside one runs in the user's session.
+            ['3C737667',         0, 'svg',   'image/svg+xml',             'SVG image'],
+
+            ['25504446',         0, 'pdf',   'application/pdf',           'Portable Document Format'],
+            ['504B0304',         0, 'zip',   'application/zip',           'ZIP archive'],
+            ['504B0506',         0, 'zip',   'application/zip',           'ZIP archive (empty)'],
+            ['504B0708',         0, 'zip',   'application/zip',           'ZIP archive (spanned)'],
+            ['49492A00',         0, 'tif',   'image/tiff',                'TIFF image'],
+            ['4D4D002A',         0, 'tif',   'image/tiff',                'TIFF image'],
+            ['47494638',         0, 'gif',   'image/gif',                 'GIF image'],
+            ['38425053',         0, 'psd',   'image/vnd.adobe.photoshop', 'Photoshop document'],
+            ['4F676753',         0, 'ogg',   'audio/ogg',                 'Ogg container'],
+            ['664C6143',         0, 'flac',  'audio/flac',                'FLAC audio'],
+            ['1A45DFA3',         0, 'mkv',   'video/x-matroska',          'Matroska container'],
+            ['7F454C46',         0, 'elf',   'application/x-elf',         'ELF executable'],
+            ['CAFEBABE',         0, 'class', 'application/java-vm',       'Java class file'],
+            ['4D534346',         0, 'cab',   'application/vnd.ms-cab-compressed', 'Cabinet archive'],
+            ['25215053',         0, 'ps',    'application/postscript',    'PostScript document'],
+
+            // "ftyp" sits at byte 4, after the box length.
+            ['66747970',         4, 'mp4',   'video/mp4',                 'MP4 container'],
+
+            ['FFD8FF',           0, 'jpg',   'image/jpeg',                'JPEG image'],
+            ['494433',           0, 'mp3',   'audio/mpeg',                'MP3 audio'],
+            ['1F8B',             0, 'gz',    'application/gzip',          'GZIP archive'],
+            ['4D5A',             0, 'exe',   'application/x-msdownload',  'Windows executable']
+        ];
+    }
+
+    /// <summary>
+    /// Extensions that are VARIANTS of one another. Membership is symmetric.
+    /// </summary>
+    /// <returns>A container of containers, each inner container one family.</returns>
+    private static container families()
+    {
+        return [
+            ['docx', 'docm', 'dotx', 'dotm'],
+            ['xlsx', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xlam'],
+            ['pptx', 'pptm', 'potx', 'potm', 'ppsx', 'ppsm', 'ppam'],
+            ['odt', 'ott'],
+            ['ods', 'ots'],
+            ['odp', 'otp'],
+            ['doc', 'dot'],
+            ['xls', 'xlt', 'xla'],
+            ['ppt', 'pot', 'pps'],
+            ['zip', 'jar', 'apk', 'epub'],
+            ['html', 'htm', 'xhtml'],
+            ['txt', 'csv', 'log', 'md', 'dat', 'ini', 'cfg', 'json'],
+            ['jpg', 'jpeg', 'jpe'],
+            ['tif', 'tiff'],
+            ['mp4', 'm4v', 'm4a']
+        ];
+    }
+
+    /// <summary>
+    /// Reads the stream's leading bytes and identifies them, restoring the position it was given.
+    /// </summary>
+    /// <param name = "_stream">The content to inspect.</param>
+    /// <param name = "_expectedExtension">The normalized claimed extension, carried into the result.</param>
+    /// <returns>An Identified, Unrecognized or NotChecked result. Never null, never throws.</returns>
+    private static FOSecureContentCheckResult detectFormat(System.IO.Stream _stream, str _expectedExtension)
+    {
+        FOSecureContentCheckResult result;
+        int64                      originalPosition;
+
+        if (_stream == null || !_stream.CanRead || !_stream.CanSeek)
+        {
+            return FOSecureContentCheckResult::notChecked(_expectedExtension);
+        }
+
+        try
+        {
+            originalPosition = _stream.Position;
+        }
+        catch (Exception::CLRError)
+        {
+            return FOSecureContentCheckResult::notChecked(_expectedExtension);
+        }
+
+        try
+        {
+            _stream.Position = 0;
+
+            result = FOSecureContentCheck::matchSignature(_stream, _expectedExtension);
+        }
+        catch (Exception::CLRError)
+        {
+            result = FOSecureContentCheckResult::notChecked(_expectedExtension);
+        }
+        catch (Exception::Error)
+        {
+            result = FOSecureContentCheckResult::notChecked(_expectedExtension);
+        }
+        finally
+        {
+            try
+            {
+                _stream.Position = originalPosition;
+            }
+            catch (Exception::CLRError)
+            {
+                exceptionTextFallThrough();
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Identifies the content a stream starts with.
+    /// </summary>
+    /// <param name = "_stream">The content, positioned where reading should begin.</param>
+    /// <param name = "_expectedExtension">The normalized claimed extension, carried into the result.</param>
+    /// <returns>An Identified result, or Unrecognized when nothing in the table matches.</returns>
+    private static FOSecureContentCheckResult matchSignature(System.IO.Stream _stream, str _expectedExtension)
+    {
+        int           headerBytes = FOSecureContentConstants::HeaderBytes;
+        System.Byte[] header      = new System.Byte[headerBytes]();
+        int           read;
+        str           hex;
+
+        read = _stream.Read(header, 0, headerBytes);
+
+        if (read <= 0)
+        {
+            return FOSecureContentCheckResult::unrecognized(_expectedExtension);
+        }
+
+        hex = strUpr(strRem(System.BitConverter::ToString(header, 0, read), '-'));
+
+        return FOSecureContentCheck::matchHeader(hex, _expectedExtension);
+    }
+
+    /// <summary>
+    /// Finds the first table row whose prefix the header carries.
+    /// </summary>
+    /// <param name = "_hex">The leading bytes as uppercase hex, without separators.</param>
+    /// <param name = "_expectedExtension">The normalized claimed extension, carried into the result.</param>
+    /// <returns>An Identified result, or Unrecognized when nothing matched.</returns>
+    private static FOSecureContentCheckResult matchHeader(str _hex, str _expectedExtension)
+    {
+        container rows = FOSecureContentCheck::signatures();
+        container row;
+        str       prefix;
+        int       offset;
+        int       i;
+
+        for (i = 1; i <= conLen(rows); i++)
+        {
+            row    = conPeek(rows, i);
+            prefix = conPeek(row, FOSecureContentCheck::SigPrefix);
+            offset = conPeek(row, FOSecureContentCheck::SigOffset);
+
+            if (strLen(_hex) >= offset * 2 + strLen(prefix)
+                && subStr(_hex, offset * 2 + 1, strLen(prefix)) == prefix)
+            {
+                return FOSecureContentCheckResult::identified(
+                    _expectedExtension,
+                    conPeek(row, FOSecureContentCheck::SigName),
+                    FOSecureContentCheck::normalize(conPeek(row, FOSecureContentCheck::SigExtension)));
+            }
+        }
+
+        return FOSecureContentCheckResult::unrecognized(_expectedExtension);
+    }
+
+    /// <summary>
+    /// Finds the family a normalized extension belongs to.
+    /// </summary>
+    /// <param name = "_extension">A normalized extension.</param>
+    /// <param name = "_allFamilies">The table to look in.</param>
+    /// <returns>The one-based family position, or 0 when the extension is in no family.</returns>
+    private static int familyOf(str _extension, container _allFamilies)
+    {
+        container members;
+        int       family;
+        int       member;
+
+        for (family = 1; family <= conLen(_allFamilies); family++)
+        {
+            members = conPeek(_allFamilies, family);
+
+            for (member = 1; member <= conLen(members); member++)
+            {
+                if (_extension == conPeek(members, member))
+                {
+                    return family;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Extensions that SHARE A SIGNATURE and cannot be told apart from it alone.
+    /// </summary>
+    /// <returns>A container of containers, each inner container one family.</returns>
+    /// <remarks>
+    /// Used when no inspector could name the format. Keeping this separate from families() is what
+    /// stops an ordinary .docx being rejected when its directory could not be read.
+    /// </remarks>
+    private static container containerFamilies()
+    {
+        return [
+            // OLE2 compound documents, all sharing D0 CF 11 E0 A1 B1 1A E1.
+            ['doc', 'dot', 'xls', 'xlt', 'xla', 'ppt', 'pot', 'pps', 'msg', 'vsd'],
+
+            // Everything built on a ZIP, all sharing 50 4B 03 04.
+            ['zip', 'docx', 'docm', 'dotx', 'dotm',
+            'xlsx', 'xlsm', 'xlsb', 'xltx', 'xltm', 'xlam',
+            'pptx', 'pptm', 'potx', 'potm', 'ppsx', 'ppsm', 'ppam',
+            'odt', 'ott', 'ods', 'ots', 'odp', 'otp', 'odg',
+            'jar', 'apk', 'epub'],
+
+            // Mostly unsigned. A .txt opening with an XML declaration is legitimately xml.
+            ['txt', 'csv', 'log', 'md', 'dat', 'ini', 'cfg', 'xml', 'html', 'htm', 'xhtml', 'json', 'svg'],
+
+            ['jpg', 'jpeg', 'jpe'],
+            ['tif', 'tiff'],
+            ['mp4', 'm4v', 'm4a']
+        ];
+    }
+
+    /// <summary>
+    /// Determines whether two normalized extensions share a family.
+    /// </summary>
+    /// <param name = "_first">The first extension.</param>
+    /// <param name = "_second">The second extension.</param>
+    /// <param name = "_allFamilies">The table to look in.</param>
+    /// <returns>true when both are known and in the same family.</returns>
+    private static boolean sameFamily(str _first, str _second, container _allFamilies)
+    {
+        int firstFamily  = FOSecureContentCheck::familyOf(_first, _allFamilies);
+        int secondFamily = FOSecureContentCheck::familyOf(_second, _allFamilies);
+
+        return firstFamily != 0 && secondFamily != 0 && firstFamily == secondFamily;
+    }
+
+    /// <summary>
+    /// Reports a file that is valid as two formats at once.
+    /// </summary>
+    /// <param name = "_window">The content.</param>
+    /// <param name = "_detectedExtension">What the signature table identified at byte zero.</param>
+    /// <param name = "_seed">Findings already collected.</param>
+    /// <returns>The findings, including those seeded.</returns>
+    /// <remarks>
+    /// Central because no single inspector sees it: a PDF behind a GIF header is classified as a
+    /// GIF. Requires BOTH another format at byte zero and a valid PDF header after it.
+    /// </remarks>
+    private static FOSecureContentFindings polyglotSweep(
+        FOSecureContentWindow   _window,
+        str                     _detectedExtension,
+        FOSecureContentFindings _seed)
+    {
+        FOSecureContentFindings findings = _seed;
+        str detected = FOSecureContentCheck::normalize(_detectedExtension);
+        str headText;
+        int pdfOffset;
+
+        // Nothing identified means no second format to conflict with; a PDF is the PDF inspector's.
+        if (!detected || detected == 'pdf')
+        {
+            return findings;
+        }
+
+        headText  = _window.textAt(0, _window.headLength());
+        pdfOffset = FOSecureContentInspectorPdf::headerOffset(headText);
+
+        if (pdfOffset > 0 && !findings.contains(FOSecureContentConstants::PolyglotEvidence))
+        {
+            findings = findings.with(FOSecureContentFinding::construct(
+                FOSecureActiveContentKind::Polyglot,
+                FOSecureContentConstants::PolyglotEvidence,
+                pdfOffset));
+        }
+
+        return findings;
+    }
+
+    /// <summary>
+    /// Identifies content as precisely as it can and reports what it carries.
+    /// </summary>
+    /// <param name = "_window">The content to examine.</param>
+    /// <param name = "_expectedExtension">The extension the file claims.</param>
+    /// <returns>What was concluded. Never null.</returns>
+    /// <remarks>
+    /// Classify centrally, then refine. Run once per attachment; hand the result to compare() so
+    /// no inspector runs twice.
+    /// </remarks>
+    public static FOSecureContentInspection examine(FOSecureContentWindow _window, FilenameType _expectedExtension)
+    {
+        FOSecureContentInspection  inspection = FOSecureContentInspection::inconclusive();
+        FOSecureContentCheckResult detected;
+        FOSecureContentInspector   inspector;
+        str                        expected = FOSecureContentCheck::normalize(_expectedExtension);
+
+        if (_window == null || _window.isEmpty())
+        {
+            return inspection;
+        }
+
+        detected  = FOSecureContentCheck::matchHeader(_window.headHex(FOSecureContentConstants::HeaderBytes), expected);
+        inspector = FOSecureContentInspectorFactory::inspectorFor(detected.detectedExtension());
+
+        if (inspector)
+        {
+            inspection = inspector.inspect(_window, expected);
+        }
+
+        return inspection.withFindings(FOSecureContentCheck::polyglotSweep(
+            _window, detected.detectedExtension(), inspection.findings()));
+    }
+
+    /// <summary>
+    /// Whether content agrees with the extension the file claims.
+    /// </summary>
+    /// <param name = "_window">The content.</param>
+    /// <param name = "_expectedExtension">The extension taken from the file name.</param>
+    /// <param name = "_inspection">The result of examine() for this same content.</param>
+    /// <returns>Mismatch is the only outcome a caller should reject on.</returns>
+    public static FOSecureContentCheckResult compare(
+        FOSecureContentWindow     _window,
+        FilenameType              _expectedExtension,
+        FOSecureContentInspection _inspection)
+    {
+        FOSecureContentCheckResult detected;
+        str     expected = FOSecureContentCheck::normalize(_expectedExtension);
+        str     detectedExtension;
+        boolean exact;
+        boolean acceptable;
+
+        if (_window == null || _window.isEmpty())
+        {
+            return FOSecureContentCheckResult::notChecked(expected);
+        }
+
+        detected = FOSecureContentCheck::matchHeader(_window.headHex(FOSecureContentConstants::HeaderBytes), expected);
+        exact    = _inspection != null && _inspection.isExact();
+
+        // A named format replaces the container it was found in: docx rather than zip.
+        if (exact)
+        {
+            detectedExtension = _inspection.refinedExtension();
+            detected = FOSecureContentCheckResult::identified(
+                expected, _inspection.refinedName(), detectedExtension);
+        }
+        else
+        {
+            detectedExtension = detected.detectedExtension();
+        }
+
+        // Unrecognized, NotChecked and no claimed extension all pass through: fail open.
+        if (detected.outcome() != FOSecureContentCheckOutcome::Identified || !expected)
+        {
+            return detected;
+        }
+
+        acceptable = FOSecureContentCheck::isAcceptable(expected, detectedExtension, exact);
+
+        return detected.withOutcome(
+            acceptable ? FOSecureContentCheckOutcome::Match : FOSecureContentCheckOutcome::Mismatch,
+            expected);
+    }
+
+    /// <summary>
+    /// The version of the detection logic.
+    /// </summary>
+    /// <returns>The current version.</returns>
+    public static int inspectorVersion()
+    {
+        return 1;
+    }
+
+}

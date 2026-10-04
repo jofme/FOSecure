@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <BuildTasksDirectory Condition=" '$(BuildTasksDirectory)' == ''">$(MSBuildProgramFiles32)\MSBuild\Microsoft\Dynamics\AX</BuildTasksDirectory>
+    <Model>FOSecure</Model>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <OutputPath>bin</OutputPath>
+    <SchemaVersion>2.0</SchemaVersion>
+    <GenerateCrossReferences>True</GenerateCrossReferences>
+    <RunAppCheckerRules>False</RunAppCheckerRules>
+    <LogAppcheckerDiagsAsErrors>False</LogAppcheckerDiagsAsErrors>
+    <DeployOnline>False</DeployOnline>
+    <ProjectGuid>{0dcd0103-03b4-4212-9acc-c90ba367a535}</ProjectGuid>
+    <Name>FOSecure</Name>
+    <RootNamespace>FOSecure</RootNamespace>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <Configuration>Debug</Configuration>
+    <DBSyncInBuild>False</DBSyncInBuild>
+    <GenerateFormAdaptors>False</GenerateFormAdaptors>
+    <Company>
+    </Company>
+    <Partition>initial</Partition>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DataEntityExpandParentChildRelations>False</DataEntityExpandParentChildRelations>
+    <DataEntityUseLabelTextAsFieldName>False</DataEntityUseLabelTextAsFieldName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Menu Extensions" />
+    <Folder Include="Table Extensions\" />
+    <Folder Include="Form Extensions\" />
+    <Folder Include="Classes\" />
+    <Folder Include="Label Files\" />
+    <Folder Include="Extended Data Types\" />
+    <Folder Include="Base Enums\" />
+    <Folder Include="Tables\" />
+    <Folder Include="Action Menu Items\" />
+    <Folder Include="Forms\" />
+    <Folder Include="Display Menu Items\" />
+    <Folder Include="Security Privileges\" />
+    <Folder Include="Security Duties\" />
+    <Folder Include="Security Roles\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AxMenuExtension\OrganizationAdministration.FOSecureExtension">
+      <SubType>Content</SubType>
+      <Name>OrganizationAdministration.FOSecureExtension</Name>
+      <Link>Menu Extensions\OrganizationAdministration.FOSecureExtension</Link>
+    </Content>
+    <Content Include="AxTableExtension\DocuParameters.FOSecureExtension">
+      <SubType>Content</SubType>
+      <Name>DocuParameters.FOSecureExtension</Name>
+      <Link>Table Extensions\DocuParameters.FOSecureExtension</Link>
+    </Content>
+    <Content Include="AxFormExtension\DocuParameters.FOSecureExtension">
+      <SubType>Content</SubType>
+      <Name>DocuParameters.FOSecureExtension</Name>
+      <Link>Form Extensions\DocuParameters.FOSecureExtension</Link>
+    </Content>
+    <Content Include="AxLabelFile\FOSecure_en-US">
+      <SubType>Content</SubType>
+      <Name>FOSecure_en-US</Name>
+      <Link>Label Files\FOSecure_en-US</Link>
+    </Content>
+    <Content Include="FOSecure.en-US.label.txt">
+      <SubType>Content</SubType>
+      <Name>FOSecure.en-US.label.txt</Name>
+      <DependentUpon>AxLabelFile\FOSecure_en-US</DependentUpon>
+    </Content>
+    <Content Include="AxEdt\FOSecureFileHash">
+      <SubType>Content</SubType>
+      <Name>FOSecureFileHash</Name>
+      <Link>Extended Data Types\FOSecureFileHash</Link>
+    </Content>
+    <Content Include="AxEdt\FOSecureBlobName">
+      <SubType>Content</SubType>
+      <Name>FOSecureBlobName</Name>
+      <Link>Extended Data Types\FOSecureBlobName</Link>
+    </Content>
+    <Content Include="AxEdt\FOSecureScanDetail">
+      <SubType>Content</SubType>
+      <Name>FOSecureScanDetail</Name>
+      <Link>Extended Data Types\FOSecureScanDetail</Link>
+    </Content>
+    <Content Include="AxEdt\FOSecureContentLength">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentLength</Name>
+      <Link>Extended Data Types\FOSecureContentLength</Link>
+    </Content>
+    <Content Include="AxEnum\FOSecureMalwareScanState">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanState</Name>
+      <Link>Base Enums\FOSecureMalwareScanState</Link>
+    </Content>
+    <Content Include="AxTable\FOSecureAttachmentScan">
+      <SubType>Content</SubType>
+      <Name>FOSecureAttachmentScan</Name>
+      <Link>Tables\FOSecureAttachmentScan</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureMalwareScanTest">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanTest</Name>
+      <Link>Classes\FOSecureMalwareScanTest</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\FOSecureMalwareScanTest">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanTest</Name>
+      <Link>Action Menu Items\FOSecureMalwareScanTest</Link>
+    </Content>
+    <Content Include="AxForm\FOSecureAttachmentScan">
+      <SubType>Content</SubType>
+      <Name>FOSecureAttachmentScan</Name>
+      <Link>Forms\FOSecureAttachmentScan</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\FOSecureAttachmentScan">
+      <SubType>Content</SubType>
+      <Name>FOSecureAttachmentScan</Name>
+      <Link>Display Menu Items\FOSecureAttachmentScan</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\FOSecureMalwareScanMaintain">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanMaintain</Name>
+      <Link>Security Privileges\FOSecureMalwareScanMaintain</Link>
+    </Content>
+    <Content Include="AxSecurityDuty\FOSecureMalwareScanMaintainDuty">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanMaintainDuty</Name>
+      <Link>Security Duties\FOSecureMalwareScanMaintainDuty</Link>
+    </Content>
+    <Content Include="AxSecurityRole\FOSecureAttachmentSecurityAdministrator">
+      <SubType>Content</SubType>
+      <Name>FOSecureAttachmentSecurityAdministrator</Name>
+      <Link>Security Roles\FOSecureAttachmentSecurityAdministrator</Link>
+    </Content>
+    <Content Include="AxEnum\FOSecureContentCheckOutcome">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentCheckOutcome</Name>
+      <Link>Base Enums\FOSecureContentCheckOutcome</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentCheckResult">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentCheckResult</Name>
+      <Link>Classes\FOSecureContentCheckResult</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureMalwareScanSubmission">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanSubmission</Name>
+      <Link>Classes\FOSecureMalwareScanSubmission</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureMalwareScanStorage">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanStorage</Name>
+      <Link>Classes\FOSecureMalwareScanStorage</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureMalwareScanResult">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanResult</Name>
+      <Link>Classes\FOSecureMalwareScanResult</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentCheck">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentCheck</Name>
+      <Link>Classes\FOSecureContentCheck</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureMalwareScanClient">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanClient</Name>
+      <Link>Classes\FOSecureMalwareScanClient</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureMalwareScanManager">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanManager</Name>
+      <Link>Classes\FOSecureMalwareScanManager</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureDocuEventHandler">
+      <SubType>Content</SubType>
+      <Name>FOSecureDocuEventHandler</Name>
+      <Link>Classes\FOSecureDocuEventHandler</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureMalwareScanStatusService">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanStatusService</Name>
+      <Link>Classes\FOSecureMalwareScanStatusService</Link>
+    </Content>
+    <Content Include="AxMenuItemAction\FOSecureMalwareScanStatus">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanStatus</Name>
+      <Link>Action Menu Items\FOSecureMalwareScanStatus</Link>
+    </Content>
+    <Content Include="AxEdt\FOSecureFindingDetail">
+      <SubType>Content</SubType>
+      <Name>FOSecureFindingDetail</Name>
+      <Link>Extended Data Types\FOSecureFindingDetail</Link>
+    </Content>
+    <Content Include="AxEdt\FOSecureInspectorVersion">
+      <SubType>Content</SubType>
+      <Name>FOSecureInspectorVersion</Name>
+      <Link>Extended Data Types\FOSecureInspectorVersion</Link>
+    </Content>
+    <Content Include="AxEnum\FOSecureActiveContentKind">
+      <SubType>Content</SubType>
+      <Name>FOSecureActiveContentKind</Name>
+      <Link>Base Enums\FOSecureActiveContentKind</Link>
+    </Content>
+    <Content Include="AxEnum\FOSecureActiveContentSeverity">
+      <SubType>Content</SubType>
+      <Name>FOSecureActiveContentSeverity</Name>
+      <Link>Base Enums\FOSecureActiveContentSeverity</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentWindow">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentWindow</Name>
+      <Link>Classes\FOSecureContentWindow</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentFinding">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentFinding</Name>
+      <Link>Classes\FOSecureContentFinding</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentFindings">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentFindings</Name>
+      <Link>Classes\FOSecureContentFindings</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureActiveContentPolicy">
+      <SubType>Content</SubType>
+      <Name>FOSecureActiveContentPolicy</Name>
+      <Link>Classes\FOSecureActiveContentPolicy</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureDeflate">
+      <SubType>Content</SubType>
+      <Name>FOSecureDeflate</Name>
+      <Link>Classes\FOSecureDeflate</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentInspection">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentInspection</Name>
+      <Link>Classes\FOSecureContentInspection</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentInspector">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentInspector</Name>
+      <Link>Classes\FOSecureContentInspector</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentInspectorMarkup">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentInspectorMarkup</Name>
+      <Link>Classes\FOSecureContentInspectorMarkup</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentInspectorPdf">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentInspectorPdf</Name>
+      <Link>Classes\FOSecureContentInspectorPdf</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentInspectorZip">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentInspectorZip</Name>
+      <Link>Classes\FOSecureContentInspectorZip</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentInspectorOle2">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentInspectorOle2</Name>
+      <Link>Classes\FOSecureContentInspectorOle2</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentInspectorFactory">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentInspectorFactory</Name>
+      <Link>Classes\FOSecureContentInspectorFactory</Link>
+    </Content>
+    <Content Include="AxTable\FOSecureAttachmentInspection">
+      <SubType>Content</SubType>
+      <Name>FOSecureAttachmentInspection</Name>
+      <Link>Tables\FOSecureAttachmentInspection</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentGate">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentGate</Name>
+      <Link>Classes\FOSecureContentGate</Link>
+    </Content>
+    <Content Include="AxForm\FOSecureAttachmentInspection">
+      <SubType>Content</SubType>
+      <Name>FOSecureAttachmentInspection</Name>
+      <Link>Forms\FOSecureAttachmentInspection</Link>
+    </Content>
+    <Content Include="AxMenuItemDisplay\FOSecureAttachmentInspection">
+      <SubType>Content</SubType>
+      <Name>FOSecureAttachmentInspection</Name>
+      <Link>Display Menu Items\FOSecureAttachmentInspection</Link>
+    </Content>
+    <Content Include="AxSecurityPrivilege\FOSecureContentInspectionView">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentInspectionView</Name>
+      <Link>Security Privileges\FOSecureContentInspectionView</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureContentConstants">
+      <SubType>Content</SubType>
+      <Name>FOSecureContentConstants</Name>
+      <Link>Classes\FOSecureContentConstants</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureMalwareScanConstants">
+      <SubType>Content</SubType>
+      <Name>FOSecureMalwareScanConstants</Name>
+      <Link>Classes\FOSecureMalwareScanConstants</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureDocuParametersEventHandler">
+      <SubType>Content</SubType>
+      <Name>FOSecureDocuParametersEventHandler</Name>
+      <Link>Classes\FOSecureDocuParametersEventHandler</Link>
+    </Content>
+    <Content Include="AxClass\FOSecureGateMessage">
+      <SubType>Content</SubType>
+      <Name>FOSecureGateMessage</Name>
+      <Link>Classes\FOSecureGateMessage</Link>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Import Project="$(BuildTasksDirectory)\Microsoft.Dynamics.Framework.Tools.BuildTasks.17.0.targets" />
+</Project>

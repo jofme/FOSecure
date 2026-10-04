@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxTableExtension xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>DocuParameters.FOSecureExtension</Name>
+	<FieldGroupExtensions />
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>FOSecureContentValidation</Name>
+			<Label>@SYS334417</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>FOSecureValidateAttachmentContent</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FOSecureBlockActiveContent</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FOSecureMaxInspectBytes</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>FOSecureMalwareScanning</Name>
+			<Label>@FOSecure:MalwareScanningGroup</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>FOSecureScanAttachmentsForMalware</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FOSecureBlockWhenScanUnavailable</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FOSecureQuarantineStorageAccount</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FOSecureQuarantineContainer</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FOSecureQuarantineKeyVaultRef</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FOSecureQuarantineSasSecretRef</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FOSecureMaxScanBytes</DataField>
+				</AxTableFieldGroupField>
+				<AxTableFieldGroupField>
+					<DataField>FOSecureMaxScanWaitSeconds</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<FieldModifications />
+	<Fields>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>FOSecureValidateAttachmentContent</Name>
+			<HelpText>@FOSecure:ValidateAttachmentContentHelp</HelpText>
+			<Label>@FOSecure:ValidateAttachmentContent</Label>
+			<EnumType>NoYes</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>FOSecureScanAttachmentsForMalware</Name>
+			<HelpText>@FOSecure:ScanForMalwareHelp</HelpText>
+			<Label>@FOSecure:ScanForMalware</Label>
+			<EnumType>NoYes</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>FOSecureBlockWhenScanUnavailable</Name>
+			<HelpText>@FOSecure:BlockWhenUnavailableHelp</HelpText>
+			<Label>@FOSecure:BlockWhenUnavailable</Label>
+			<EnumType>NoYes</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>FOSecureQuarantineStorageAccount</Name>
+			<ExtendedDataType>Name</ExtendedDataType>
+			<HelpText>@FOSecure:QuarantineStorageAccountHelp</HelpText>
+			<Label>@FOSecure:QuarantineStorageAccount</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>FOSecureQuarantineContainer</Name>
+			<ExtendedDataType>Name</ExtendedDataType>
+			<HelpText>@FOSecure:QuarantineContainerHelp</HelpText>
+			<Label>@FOSecure:QuarantineContainer</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt64">
+			<Name>FOSecureQuarantineSasSecretRef</Name>
+			<ExtendedDataType>KeyVaultCertificateRef</ExtendedDataType>
+			<HelpText>@FOSecure:QuarantineSasSecretNameHelp</HelpText>
+			<Label>@FOSecure:QuarantineSasSecretName</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt64">
+			<Name>FOSecureMaxScanBytes</Name>
+			<ExtendedDataType>FOSecureContentLength</ExtendedDataType>
+			<HelpText>@FOSecure:MaxScanFileSizeHelp</HelpText>
+			<Label>@FOSecure:MaxScanFileSize</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldEnum">
+			<Name>FOSecureBlockActiveContent</Name>
+			<Label>@FOSecure:BlockActiveContent</Label>
+			<EnumType>NoYes</EnumType>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt64">
+			<Name>FOSecureMaxInspectBytes</Name>
+			<ExtendedDataType>FOSecureContentLength</ExtendedDataType>
+			<Label>@FOSecure:MaxInspectBytes</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt">
+			<Name>FOSecureMaxScanWaitSeconds</Name>
+			<ExtendedDataType>Seconds</ExtendedDataType>
+			<HelpText>@FOSecure:MaxScanWaitSecondsHelp</HelpText>
+			<Label>@FOSecure:MaxScanWaitSeconds</Label>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldInt64">
+			<Name>FOSecureQuarantineKeyVaultRef</Name>
+			<ExtendedDataType>KeyVaultRef</ExtendedDataType>
+			<HelpText>@FOSecure:QuarantineKeyVaultHelp</HelpText>
+			<Label>@FOSecure:QuarantineKeyVault</Label>
+		</AxTableField>
+	</Fields>
+	<FullTextIndexes />
+	<Indexes />
+	<Mappings />
+	<PropertyModifications />
+	<RelationExtensions />
+	<RelationModifications />
+	<Relations>
+		<AxTableRelation>
+			<Name>FOSecureQuarantineSasSecret</Name>
+			<Cardinality>ZeroMore</Cardinality>
+			<RelatedTable>KeyVaultCertificateTable</RelatedTable>
+			<RelatedTableCardinality>ZeroOne</RelatedTableCardinality>
+			<RelationshipType>Association</RelationshipType>
+			<Constraints>
+				<AxTableRelationConstraint xmlns=""
+					i:type="AxTableRelationConstraintField">
+					<Name>FOSecureQuarantineSasSecretRef</Name>
+					<Field>FOSecureQuarantineSasSecretRef</Field>
+					<RelatedField>RecId</RelatedField>
+				</AxTableRelationConstraint>
+			</Constraints>
+		</AxTableRelation>
+		<AxTableRelation>
+			<Name>FOSecureQuarantineKeyVault</Name>
+			<Cardinality>ZeroOne</Cardinality>
+			<RelatedTable>KeyVaultParameters</RelatedTable>
+			<RelatedTableCardinality>ExactlyOne</RelatedTableCardinality>
+			<RelationshipType>Association</RelationshipType>
+			<Constraints>
+				<AxTableRelationConstraint xmlns=""
+					i:type="AxTableRelationConstraintField">
+					<Name>FOSecureQuarantineKeyVaultRef</Name>
+					<Field>FOSecureQuarantineKeyVaultRef</Field>
+					<RelatedField>RecId</RelatedField>
+				</AxTableRelationConstraint>
+			</Constraints>
+		</AxTableRelation>
+	</Relations>
+</AxTableExtension>

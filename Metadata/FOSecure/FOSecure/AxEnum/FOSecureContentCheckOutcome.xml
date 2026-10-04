@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxEnum xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>FOSecureContentCheckOutcome</Name>
+	<Label>@FOSecure:ContentCheckOutcome</Label>
+	<UseEnumValue>No</UseEnumValue>
+	<EnumValues>
+		<AxEnumValue>
+			<Name>NotChecked</Name>
+			<Label>@FOSecure:NotChecked</Label>
+			<HelpText>The content could not be inspected. Treated as allow.</HelpText>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Unrecognized</Name>
+			<Label>@FOSecure:Unrecognized</Label>
+			<HelpText>The content carries no signature this check recognizes. Treated as allow.</HelpText>
+			<Value>1</Value>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Identified</Name>
+			<Label>@FOSecure:Identified</Label>
+			<HelpText>The content was identified, but no claimed extension was supplied to compare it against.</HelpText>
+			<Value>2</Value>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Match</Name>
+			<Label>@FOSecure:MatchesTheExtension</Label>
+			<HelpText>The identified content agrees with the extension the file claims.</HelpText>
+			<Value>3</Value>
+		</AxEnumValue>
+		<AxEnumValue>
+			<Name>Mismatch</Name>
+			<Label>@FOSecure:ContradictsTheExtension</Label>
+			<HelpText>The identified content contradicts the extension the file claims. The only outcome a caller may reject on.</HelpText>
+			<Value>4</Value>
+		</AxEnumValue>
+	</EnumValues>
+	<IsExtensible>true</IsExtensible>
+</AxEnum>

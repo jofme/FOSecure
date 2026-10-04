@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>FOSecureContentFinding</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+/// <summary>
+/// One piece of active content found in a file. Immutable.
+/// </summary>
+public final class FOSecureContentFinding
+{
+    private FOSecureActiveContentKind findingKind;
+    private str evidenceLabel;
+    private int64 foundAtOffset;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>new</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Initializes a finding from its parts.
+    /// </summary>
+    /// <param name = "_kind">What sort of active content this is.</param>
+    /// <param name = "_evidenceLabelId">Label describing the evidence.</param>
+    /// <param name = "_byteOffset">Where it was found, or -1 for the whole file.</param>
+    private void new(FOSecureActiveContentKind _kind, str _evidenceLabelId, int64 _byteOffset)
+    {
+        findingKind   = _kind;
+        evidenceLabel = _evidenceLabelId;
+        foundAtOffset = _byteOffset;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>construct</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Creates a finding.
+    /// </summary>
+    /// <param name = "_kind">What sort of active content this is.</param>
+    /// <param name = "_evidenceLabelId">Label describing the evidence.</param>
+    /// <param name = "_byteOffset">Where it was found, or -1 for the whole file.</param>
+    /// <returns>The finding.</returns>
+    public static FOSecureContentFinding construct(
+        FOSecureActiveContentKind _kind,
+        str                       _evidenceLabelId,
+        int64                     _byteOffset = FOSecureContentConstants::NotFound)
+    {
+        return new FOSecureContentFinding(_kind, _evidenceLabelId, _byteOffset);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>kind</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// What sort of active content this is.
+    /// </summary>
+    /// <returns>The kind the policy rates.</returns>
+    public FOSecureActiveContentKind kind()
+    {
+        return findingKind;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>evidenceLabelId</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// The label describing the evidence.
+    /// </summary>
+    /// <returns>A label id, unresolved.</returns>
+    public str evidenceLabelId()
+    {
+        return evidenceLabel;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>byteOffset</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Where the evidence was found.
+    /// </summary>
+    /// <returns>An absolute byte offset, or -1.</returns>
+    public int64 byteOffset()
+    {
+        return foundAtOffset;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>describe</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// The evidence as text in the user's language.
+    /// </summary>
+    /// <returns>The resolved label, or an empty string.</returns>
+    public str describe()
+    {
+        return evidenceLabel ? SysLabel::labelId2String2(evidenceLabel) : '';
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

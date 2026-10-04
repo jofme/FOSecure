@@ -1,0 +1,126 @@
+﻿/// <summary>
+/// The outcome of a magic-byte inspection, with whatever the inspection identified.
+/// </summary>
+public final class FOSecureContentCheckResult
+{
+    // Backing fields are named apart from their accessors so a bare name here is the field.
+    private FOSecureContentCheckOutcome checkOutcome;
+    private str expectedExtension;
+    private str detectedFormatName;
+    private str detectedFormatExtension;
+
+    /// <summary>
+    /// Initializes a result from its parts.
+    /// </summary>
+    /// <param name = "_outcome">What the inspection concluded.</param>
+    /// <param name = "_expectedExtension">The normalized extension from the file name, or empty.</param>
+    /// <param name = "_detectedName">The readable name of the detected format, or empty.</param>
+    /// <param name = "_detectedExtension">The normalized extension of the detected format, or empty.</param>
+    private void new(
+        FOSecureContentCheckOutcome _outcome,
+        str                         _expectedExtension,
+        str                         _detectedName,
+        str                         _detectedExtension)
+    {
+        checkOutcome            = _outcome;
+        expectedExtension       = _expectedExtension;
+        detectedFormatName      = _detectedName;
+        detectedFormatExtension = _detectedExtension;
+    }
+
+    /// <summary>
+    /// What the inspection concluded.
+    /// </summary>
+    /// <returns>The outcome. Only Mismatch may be rejected on.</returns>
+    public FOSecureContentCheckOutcome outcome()
+    {
+        return checkOutcome;
+    }
+
+    /// <summary>
+    /// The readable name of the detected format, for example "Portable Document Format".
+    /// </summary>
+    /// <returns>The name, or an empty string when nothing was identified.</returns>
+    public str detectedName()
+    {
+        return detectedFormatName;
+    }
+
+    /// <summary>
+    /// The normalized extension of the detected format, for example "pdf".
+    /// </summary>
+    /// <returns>The extension, or an empty string when nothing was identified.</returns>
+    public str detectedExtension()
+    {
+        return detectedFormatExtension;
+    }
+
+    /// <summary>
+    /// Renders the detected format for an error message.
+    /// </summary>
+    /// <returns>The format name, else its extension, else "unknown".</returns>
+    public str describeDetectedType()
+    {
+        if (detectedFormatName)
+        {
+            return detectedFormatName;
+        }
+
+        return detectedFormatExtension ? detectedFormatExtension : "@FOSecure:UnknownFileType";
+    }
+
+    /// <summary>
+    /// A result for content that could not be inspected at all.
+    /// </summary>
+    /// <param name = "_expectedExtension">The normalized extension from the file name, or empty.</param>
+    /// <returns>A NotChecked result, which callers treat as allow.</returns>
+    public static FOSecureContentCheckResult notChecked(str _expectedExtension)
+    {
+        return new FOSecureContentCheckResult(FOSecureContentCheckOutcome::NotChecked, _expectedExtension, '', '');
+    }
+
+    /// <summary>
+    /// A result for content that carries no signature this check recognizes.
+    /// </summary>
+    /// <param name = "_expectedExtension">The normalized extension from the file name, or empty.</param>
+    /// <returns>An Unrecognized result, which callers treat as allow.</returns>
+    public static FOSecureContentCheckResult unrecognized(str _expectedExtension)
+    {
+        return new FOSecureContentCheckResult(FOSecureContentCheckOutcome::Unrecognized, _expectedExtension, '', '');
+    }
+
+    /// <summary>
+    /// A result for content whose format was positively identified.
+    /// </summary>
+    /// <param name = "_expectedExtension">The normalized extension from the file name, or empty.</param>
+    /// <param name = "_detectedName">The readable name of the detected format.</param>
+    /// <param name = "_detectedExtension">The normalized extension of the detected format.</param>
+    /// <returns>An Identified result, not yet compared against any claimed extension.</returns>
+    public static FOSecureContentCheckResult identified(
+        str _expectedExtension,
+        str _detectedName,
+        str _detectedExtension)
+    {
+        return new FOSecureContentCheckResult(
+            FOSecureContentCheckOutcome::Identified,
+            _expectedExtension,
+            _detectedName,
+            _detectedExtension);
+    }
+
+    /// <summary>
+    /// Copies this result with the supplied outcome and expected extension.
+    /// </summary>
+    /// <param name = "_outcome">The outcome the comparison arrived at.</param>
+    /// <param name = "_expectedExtension">The normalized extension that was compared against.</param>
+    /// <returns>A new result; this one is left alone.</returns>
+    public FOSecureContentCheckResult withOutcome(FOSecureContentCheckOutcome _outcome, str _expectedExtension)
+    {
+        return new FOSecureContentCheckResult(
+            _outcome,
+            _expectedExtension,
+            detectedFormatName,
+            detectedFormatExtension);
+    }
+
+}
